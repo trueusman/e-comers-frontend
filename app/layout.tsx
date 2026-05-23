@@ -16,6 +16,9 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "Usman Store – Buy & Sell Anything",
   description: "Discover great local deals and trusted classifieds on Usman Store.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

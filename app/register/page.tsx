@@ -62,12 +62,14 @@ export default function RegisterPage() {
 
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
-            <div className="bg-[#0f172a] rounded-2xl px-6 py-3 inline-block">
-              <img
-                src="/usmanhub.logo-removebg-preview.png"
-                alt="Usman Store"
-                className="h-28 w-auto object-contain mx-auto rounded-full"
-              />
+            <div className="bg-[#0f172a] rounded-full p-4 inline-flex items-center justify-center border border-white/10">
+              <div className="h-24 w-24 rounded-full overflow-hidden bg-white p-2">
+                <img
+                  src="/usmanhub.logo-removebg-preview.png"
+                  alt="Usman Store"
+                  className="h-full w-full object-contain"
+                />
+              </div>
             </div>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-4">Create an account</h1>

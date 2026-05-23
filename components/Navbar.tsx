@@ -214,11 +214,13 @@ export default function Navbar() {
 
               {/* Logo */}
               <Link href="/" className="flex-shrink-0 flex items-center gap-2">
-                <img
-                  src="/usmanhub.logo-removebg-preview.png"
-                  alt="Usman Store"
-                  className="h-12 w-auto object-contain rounded-full"
-                />
+                <div className="h-12 w-12 rounded-full overflow-hidden bg-white/10 p-1 flex items-center justify-center border border-white/10">
+                  <img
+                    src="/usmanhub.logo-removebg-preview.png"
+                    alt="Usman Store"
+                    className="h-full w-full object-contain"
+                  />
+                </div>
                 <span className="hidden sm:inline-block text-white text-lg font-black tracking-wide">Usman Store</span>
               </Link>
 
