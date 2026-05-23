@@ -22,9 +22,9 @@ export default function Footer() {
           <div>
             <p className="font-bold text-white flex items-center gap-2">
               <Mail className="w-4 h-4 text-[#3b82f6]" />
-              Get the best deals in your inbox
+              Never miss a Usman Store deal
             </p>
-            <p className="text-sm text-gray-400 mt-0.5">Subscribe to our newsletter for daily deals</p>
+            <p className="text-sm text-gray-400 mt-0.5">Subscribe for top offers, selling tips, and weekly updates.</p>
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <input

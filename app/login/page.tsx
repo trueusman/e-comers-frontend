@@ -64,7 +64,7 @@ export default function LoginPage() {
             </div>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-4">Welcome back</h1>
-          <p className="text-gray-500 text-sm mt-1">Sign in to your account</p>
+          <p className="text-gray-500 text-sm mt-1">Sign in to Usman Store</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">

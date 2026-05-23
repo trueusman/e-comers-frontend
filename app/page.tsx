@@ -77,7 +77,7 @@ export default async function HomePage() {
       {/* Featured */}
       <section className="max-w-6xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Top Rated Products</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Top Rated Picks</h2>
           <Link href="/listings" className="text-sm text-[#0f172a] font-medium hover:underline">View all →</Link>
         </div>
         {featured.length > 0 ? (
@@ -106,11 +106,11 @@ export default async function HomePage() {
           {/* Content */}
           <div className="relative z-10 p-8 flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-white">
-              <h3 className="text-2xl font-black mb-2 drop-shadow">Sell Faster with Featured Ads</h3>
-              <p className="text-gray-200 text-sm drop-shadow">Get 10x more views by featuring your listing at the top.</p>
+              <h3 className="text-2xl font-black mb-2 drop-shadow">Boost your listing on Usman Store</h3>
+              <p className="text-gray-200 text-sm drop-shadow">Featured ads get more clicks, messages, and faster sales.</p>
             </div>
             <Link href="/post-ad" className="bg-white text-[#0f172a] font-bold px-8 py-3 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap shadow-lg">
-              Post an Ad Now
+              Post Your Ad Now
             </Link>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default async function HomePage() {
       {/* Recent */}
       <section className="max-w-6xl mx-auto px-4 py-6 pb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Fresh Arrivals</h2>
+          <h2 className="text-2xl font-bold text-gray-800">New Listings</h2>
           <Link href="/listings" className="text-sm text-[#0f172a] font-medium hover:underline">View all →</Link>
         </div>
         {recent.length > 0 ? (
@@ -140,9 +140,9 @@ export default async function HomePage() {
           <h2 className="text-2xl font-bold text-center text-gray-800 mb-10">How Usman Store Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             {[
-              { Icon: Camera,        title: "Post Your Ad",       desc: "Take a photo, write a description, and post your ad for free in minutes." },
-              { Icon: MessageCircle, title: "Connect with Buyers", desc: "Receive messages from interested buyers and negotiate the best price."    },
-              { Icon: Handshake,     title: "Close the Deal",      desc: "Meet safely, exchange the item, and complete your transaction."           },
+              { Icon: Camera,        title: "Post Your Ad",       desc: "Upload photos, set your price, and publish your listing in seconds." },
+              { Icon: MessageCircle, title: "Connect with Buyers", desc: "Chat with local buyers quickly and answer questions on the spot."    },
+              { Icon: Handshake,     title: "Close the Deal",      desc: "Choose a safe pickup or delivery option, then complete the sale."           },
             ].map(({ Icon, title, desc }) => (
               <div key={title} className="flex flex-col items-center gap-3">
                 <div className="w-16 h-16 rounded-2xl bg-[#0f172a]/5 flex items-center justify-center">

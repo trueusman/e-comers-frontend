@@ -6,28 +6,28 @@ import { useEffect, useState } from "react";
 const SLIDES = [
   {
     img: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1600&q=80",
-    title: "Buy & Sell Anything",
-    sub: "Millions of products. Find the best deals.",
+    title: "Buy & Sell with Confidence",
+    sub: "Usman Store connects buyers and sellers across Pakistan.",
   },
   {
     img: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1600&q=80",
     title: "Top Deals Every Day",
-    sub: "New arrivals added daily. Don't miss out.",
+    sub: "New listings added daily for electronics, fashion, home and more.",
   },
   {
     img: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1600&q=80",
-    title: "Sell in Minutes",
-    sub: "Post your ad for free and reach thousands of buyers.",
+    title: "Post in Minutes",
+    sub: "Create a free ad and reach thousands of local buyers instantly.",
   },
   {
     img: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=1600&q=80",
-    title: "Sports & Lifestyle",
-    sub: "Gear up with the best sports equipment near you.",
+    title: "Shop Local Picks",
+    sub: "Find trusted classifieds and delivery-friendly deals nearby.",
   },
   {
     img: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=1600&q=80",
-    title: "Electronics & Gadgets",
-    sub: "Latest smartphones, laptops and accessories.",
+    title: "Trusted Classifieds",
+    sub: "Browse verified products from real sellers with easy checkout.",
   },
 ];
 
@@ -101,10 +101,10 @@ export default function HeroSlider() {
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-xl mx-auto">
           <Link href="/listings" className="bg-white text-[#0f172a] font-bold px-8 py-3 rounded-lg hover:bg-gray-100 transition-colors">
-            Browse Products
+            Browse Deals
           </Link>
           <Link href="/post-ad" className="bg-[#3b82f6] text-white font-bold px-8 py-3 rounded-lg hover:bg-[#2563eb] transition-colors">
-            + Post Free Ad
+            Post Your Ad
           </Link>
         </div>
       </div>

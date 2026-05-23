@@ -71,7 +71,7 @@ export default function RegisterPage() {
             </div>
           </Link>
           <h1 className="text-2xl font-bold text-gray-900 mt-4">Create an account</h1>
-          <p className="text-gray-500 text-sm mt-1">Join millions of buyers and sellers</p>
+          <p className="text-gray-500 text-sm mt-1">Create your Usman Store account and start selling today</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
