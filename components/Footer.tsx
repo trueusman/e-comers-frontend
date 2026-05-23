@@ -45,9 +45,7 @@ export default function Footer() {
         {/* Brand */}
         <div className="col-span-2 md:col-span-1">
           <div className="font-black text-2xl mb-3 flex items-center gap-3">
-            <div className="h-14 w-14 rounded-full overflow-hidden bg-white/10 p-2 flex items-center justify-center border border-white/10">
-              <img src="/usmanhub.logo-removebg-preview.png" alt="Usman Store" className="h-full w-full object-contain" />
-            </div>
+            <img src="/usmanhub.logo-removebg-preview.png" alt="Usman Store" className="h-14 w-14 rounded-full object-contain" />
             <span className="text-white text-lg tracking-wide">Usman Store</span>
           </div>
           <p className="text-gray-400 text-sm leading-relaxed mb-4">
