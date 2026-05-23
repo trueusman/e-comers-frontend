@@ -1,65 +1,160 @@
-import Image from "next/image";
+import Link from "next/link";
+import ProductCard from "@/components/ProductCard";
+import CategoriesSection from "@/components/CategoriesSection";
+import HeroSlider from "@/components/HeroSlider";
+import { categories, formatPrice } from "@/lib/data";
+import {
+  Package, Search, Camera, MessageCircle, Handshake,
+} from "lucide-react";
 
-export default function Home() {
+const DUMMYJSON = "https://dummyjson.com";
+
+// Normalize DummyJSON product → our ProductCard shape
+function normalize(p: any) {
+  return {
+    _id:       String(p.id),
+    title:     p.title,
+    price:     p.price,
+    location:  p.brand || "Online",
+    category:  p.category,
+    condition: p.stock > 0 ? "New" : "Used",
+    images:    p.images?.length ? p.images : [p.thumbnail],
+    isFeatured: p.rating >= 4.5,
+    seller:    { name: p.brand || "Seller", phone: "", city: "" },
+    createdAt: p.meta?.createdAt || new Date().toISOString(),
+    rating:    p.rating,
+    stock:     p.stock,
+  };
+}
+
+async function getFeatured() {
+  try {
+    const res  = await fetch(`${DUMMYJSON}/products?limit=100&select=id,title,price,brand,category,images,thumbnail,rating,stock,meta`, { cache: "no-store" });
+    const data = await res.json();
+    return data.products
+      .filter((p: any) => p.rating >= 4.5)
+      .slice(0, 4)
+      .map(normalize);
+  } catch { return []; }
+}
+
+async function getRecent() {
+  try {
+    const res  = await fetch(`${DUMMYJSON}/products?limit=8&skip=10&select=id,title,price,brand,category,images,thumbnail,rating,stock,meta`, { cache: "no-store" });
+    const data = await res.json();
+    return data.products.map(normalize);
+  } catch { return []; }
+}
+
+export default async function HomePage() {
+  const [featured, recent] = await Promise.all([getFeatured(), getRecent()]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div>
+      {/* Hero Banner */}
+      <HeroSlider />
+
+      {/* Stats */}
+      <section className="bg-white border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap justify-center gap-8 text-center">
+          {[
+            { label: "Total Products", value: "194+" },
+            { label: "Categories",     value: "24+"  },
+            { label: "Brands",         value: "50+"  },
+            { label: "Daily Visitors", value: "500K+" },
+          ].map((stat) => (
+            <div key={stat.label}>
+              <p className="text-2xl font-black text-[#0f172a]">{stat.value}</p>
+              <p className="text-xs text-gray-500">{stat.label}</p>
+            </div>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Categories */}
+      <CategoriesSection />
+
+      {/* Featured */}
+      <section className="max-w-6xl mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Top Rated Products</h2>
+          <Link href="/listings" className="text-sm text-[#0f172a] font-medium hover:underline">View all →</Link>
         </div>
-      </main>
+        {featured.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            {featured.map((p: any) => <ProductCard key={p._id} listing={p} />)}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+            <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">No featured products.</p>
+          </div>
+        )}
+      </section>
+
+      {/* Promo Banner */}
+      <section className="max-w-6xl mx-auto px-4 py-6">
+        <div className="relative rounded-2xl overflow-hidden">
+          {/* Background image */}
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1600&q=80')" }}
+          />
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0f172a]/90 via-[#0f172a]/70 to-[#3b82f6]/60" />
+
+          {/* Content */}
+          <div className="relative z-10 p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-white">
+              <h3 className="text-2xl font-black mb-2 drop-shadow">Sell Faster with Featured Ads</h3>
+              <p className="text-gray-200 text-sm drop-shadow">Get 10x more views by featuring your listing at the top.</p>
+            </div>
+            <Link href="/post-ad" className="bg-white text-[#0f172a] font-bold px-8 py-3 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap shadow-lg">
+              Post an Ad Now
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Recent */}
+      <section className="max-w-6xl mx-auto px-4 py-6 pb-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Fresh Arrivals</h2>
+          <Link href="/listings" className="text-sm text-[#0f172a] font-medium hover:underline">View all →</Link>
+        </div>
+        {recent.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            {recent.map((p: any) => <ProductCard key={p._id} listing={p} />)}
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+            <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500 mb-3">No products found.</p>
+          </div>
+        )}
+      </section>
+
+      {/* How it works */}
+      <section className="bg-white border-t border-gray-200 py-12 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-10">How UsmanHub Works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            {[
+              { Icon: Camera,        title: "Post Your Ad",       desc: "Take a photo, write a description, and post your ad for free in minutes." },
+              { Icon: MessageCircle, title: "Connect with Buyers", desc: "Receive messages from interested buyers and negotiate the best price."    },
+              { Icon: Handshake,     title: "Close the Deal",      desc: "Meet safely, exchange the item, and complete your transaction."           },
+            ].map(({ Icon, title, desc }) => (
+              <div key={title} className="flex flex-col items-center gap-3">
+                <div className="w-16 h-16 rounded-2xl bg-[#0f172a]/5 flex items-center justify-center">
+                  <Icon className="w-8 h-8 text-[#0f172a]" />
+                </div>
+                <h3 className="font-bold text-lg text-gray-800">{title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
