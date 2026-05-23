@@ -58,7 +58,7 @@ export default function LoginPage() {
             <div className="bg-[#0f172a] rounded-2xl px-6 py-3 inline-block">
               <img
                 src="/usmanhub.logo-removebg-preview.png"
-                alt="UsmanHub"
+                alt="Usman Store"
                 className="h-28 w-auto object-contain mx-auto rounded-full"
               />
             </div>

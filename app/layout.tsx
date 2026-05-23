@@ -14,7 +14,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "UsmanHub – Buy & Sell Anything",
+  title: "Usman Store – Buy & Sell Anything",
   description: "Find great deals on new and used items near you.",
 };
 

@@ -137,7 +137,7 @@ export default async function HomePage() {
       {/* How it works */}
       <section className="bg-white border-t border-gray-200 py-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-2xl font-bold text-center text-gray-800 mb-10">How UsmanHub Works</h2>
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-10">How Usman Store Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
             {[
               { Icon: Camera,        title: "Post Your Ad",       desc: "Take a photo, write a description, and post your ad for free in minutes." },

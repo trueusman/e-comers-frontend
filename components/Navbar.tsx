@@ -216,9 +216,10 @@ export default function Navbar() {
               <Link href="/" className="flex-shrink-0 flex items-center gap-2">
                 <img
                   src="/usmanhub.logo-removebg-preview.png"
-                  alt="UsmanHub"
+                  alt="Usman Store"
                   className="h-12 w-auto object-contain rounded-full"
                 />
+                <span className="hidden sm:inline-block text-white text-lg font-black tracking-wide">Usman Store</span>
               </Link>
 
               <div className="flex-1" />
@@ -278,7 +279,7 @@ export default function Navbar() {
                           <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-3">
                             <User className="w-7 h-7 text-gray-400" />
                           </div>
-                          <p className="text-white font-semibold text-sm">Welcome to UsmanHub</p>
+                          <p className="text-white font-semibold text-sm">Welcome to Usman Store</p>
                           <p className="text-gray-400 text-xs mt-1">Login to access your account</p>
                         </div>
                         <div className="px-4 flex flex-col gap-2">

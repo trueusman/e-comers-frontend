@@ -44,8 +44,9 @@ export default function Footer() {
 
         {/* Brand */}
         <div className="col-span-2 md:col-span-1">
-          <div className="font-black text-2xl mb-3">
-            <img src="/usmanhub.logo-removebg-preview.png" alt="UsmanHub" className="h-14 w-auto object-contain" />
+          <div className="font-black text-2xl mb-3 flex items-center gap-2">
+            <img src="/usmanhub.logo-removebg-preview.png" alt="Usman Store" className="h-14 w-auto object-contain" />
+            <span className="text-white text-lg tracking-wide">Usman Store</span>
           </div>
           <p className="text-gray-400 text-sm leading-relaxed mb-4">
             Pakistan&apos;s trusted online classifieds marketplace. Buy and sell anything, anywhere.
@@ -136,7 +137,7 @@ export default function Footer() {
       {/* ── Bottom bar ────────────────────────────── */}
       <div className="border-t border-white/10 py-5">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-500">
-          <p>© {new Date().getFullYear()} UsmanHub. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Usman Store. All rights reserved.</p>
           <div className="flex gap-4">
             <a href="#" className="hover:text-gray-300 transition-colors">Privacy</a>
             <a href="#" className="hover:text-gray-300 transition-colors">Terms</a>
