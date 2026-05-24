@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
-import { backendFetch, mapCategoryToBackend } from "@/lib/backend";import {
-  Smartphone, Laptop, Tablet, Plug, Car, Bike,
+import {  Smartphone, Laptop, Tablet, Plug, Car, Bike,
   Sofa, Home, Trophy, Sparkles, Leaf, Shirt,
   ShoppingBag, Watch, Gem, Utensils, BookOpen,
   Package, SearchX, SlidersHorizontal, X, ChevronDown,

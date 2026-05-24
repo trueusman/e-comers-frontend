@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { backendFetch } from "@/lib/backend";
+
+function backendFetch(path: string, options: RequestInit = {}) {
+  const headers = new Headers(options.headers || {});
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token && !headers.has("Authorization")) headers.set("Authorization", `Bearer ${token}`);
+  }
+  return fetch(path, { ...options, headers });
+}
 
 export default function GoogleCallbackPage() {
   const router = useRouter();
