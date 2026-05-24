@@ -4,9 +4,9 @@ import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import AddToCartButton from "@/components/AddToCartButton";
 import { formatPrice } from "@/lib/data";
+import connectDB from "@/lib/mongoose";
+import Listing from "@/models/Listing";
 import { MapPin, Eye, Phone, MessageCircle, Bookmark, AlertTriangle, Star } from "lucide-react";
-
-const BATCH17_API = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
 function normalize(p: any) {
   return {
@@ -31,28 +31,22 @@ function normalize(p: any) {
 
 async function getProduct(id: string) {
   try {
-    const res = await fetch(`${BATCH17_API}/products/${id}`, { next: { revalidate: 3600 } });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return normalize(data);
-  } catch {
-    return null;
-  }
+    await connectDB();
+    const listing = await Listing.findById(id).populate("seller", "name phone city avatar createdAt").lean();
+    if (!listing) return null;
+    return normalize(JSON.parse(JSON.stringify(listing)));
+  } catch { return null; }
 }
 
 async function getRelated(category: string, currentId: string) {
   try {
-    const res = await fetch(`${BATCH17_API}/products`, { next: { revalidate: 3600 } });
-    if (!res.ok) return [];
-    const data = await res.json();
-    const products = Array.isArray(data) ? data : (data.products || []);
-    return products
-      .filter((p: any) => p.category === category && String(p.id || p._id) !== currentId)
-      .slice(0, 4)
-      .map(normalize);
-  } catch {
-    return [];
-  }
+    await connectDB();
+    const listings = await Listing.find({ isActive: true, category, _id: { $ne: currentId } })
+      .populate("seller", "name phone city avatar")
+      .limit(4)
+      .lean();
+    return JSON.parse(JSON.stringify(listings)).map(normalize);
+  } catch { return []; }
 }
 
 interface Props { params: Promise<{ id: string }> }
