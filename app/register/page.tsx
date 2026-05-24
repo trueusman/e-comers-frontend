@@ -6,6 +6,16 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Globe } from "lucide-react";
 import { backendFetch } from "@/lib/backend";
 
+// Simple fetch wrapper that adds auth token
+function backendFetch(path: string, options: RequestInit = {}) {
+  const headers = new Headers(options.headers || {});
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token && !headers.has("Authorization")) headers.set("Authorization", `Bearer ${token}`);
+  }
+  return fetch(path, { ...options, headers });
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm]       = useState({ name: "", email: "", phone: "", password: "", confirmPassword: "", city: "" });

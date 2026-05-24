@@ -5,6 +5,15 @@ import { categories } from "@/lib/data";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { backendFetch } from "@/lib/backend";
+
+function backendFetch(path: string, options: RequestInit = {}) {
+  const headers = new Headers(options.headers || {});
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token && !headers.has("Authorization")) headers.set("Authorization", `Bearer ${token}`);
+  }
+  return fetch(path, { ...options, headers });
+}
 import { useAuthGuard } from "@/lib/useAuthGuard";
 import LoginModal from "@/components/LoginModal";
 import {
