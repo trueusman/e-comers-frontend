@@ -6,7 +6,7 @@ import AddToCartButton from "@/components/AddToCartButton";
 import { formatPrice } from "@/lib/data";
 import { MapPin, Eye, Phone, MessageCircle, Bookmark, AlertTriangle, Star } from "lucide-react";
 
-const BATCH17_API = "https://ecommerce-batch-17-jyvv.vercel.app";
+const BATCH17_API = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
 function normalize(p: any) {
   return {

@@ -60,7 +60,7 @@ function ListingsContent() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("https://ecommerce-batch-17-jyvv.vercel.app/products");
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/products`);
       if (!res.ok) { setProducts([]); setTotal(0); return; }
       const data = await res.json();
       let result = Array.isArray(data) ? data : (data.products || []);

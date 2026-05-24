@@ -4,7 +4,7 @@ import CategoriesSection from "@/components/CategoriesSection";
 import HeroSlider from "@/components/HeroSlider";
 import { Package, Search, Camera, MessageCircle, Handshake } from "lucide-react";
 
-const BATCH17_API = "https://ecommerce-batch-17-jyvv.vercel.app";
+const BATCH17_API = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
 function normalize(p: any) {
   return {
