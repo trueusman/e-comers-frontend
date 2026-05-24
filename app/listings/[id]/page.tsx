@@ -4,9 +4,9 @@ import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import AddToCartButton from "@/components/AddToCartButton";
 import { formatPrice } from "@/lib/data";
-import connectDB from "@/lib/mongoose";
-import Listing from "@/models/Listing";
 import { MapPin, Eye, Phone, MessageCircle, Bookmark, AlertTriangle, Star } from "lucide-react";
+
+const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 function normalize(p: any) {
   return {
@@ -15,11 +15,11 @@ function normalize(p: any) {
     price:       p.price,
     location:    p.location || "Online",
     category:    p.category || "other",
-    condition:   p.condition || "Used",
-    images:      Array.isArray(p.images) && p.images.length ? p.images : [p.image || "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400&q=80"],
+    condition:   p.condition || "New",
+    images:      Array.isArray(p.images) && p.images.length ? p.images : [p.thumbnail || "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400&q=80"],
     isFeatured:  p.isFeatured || false,
     description: p.description || "",
-    seller:      p.seller || { name: "Seller", phone: "", city: "" },
+    seller:      p.seller || { name: "BazaarHub Team", phone: "0300-0000000", city: "" },
     createdAt:   p.createdAt || new Date().toISOString(),
     rating:      p.rating || 0,
     stock:       typeof p.stock === "number" ? p.stock : 1,
@@ -31,21 +31,23 @@ function normalize(p: any) {
 
 async function getProduct(id: string) {
   try {
-    await connectDB();
-    const listing = await Listing.findById(id).populate("seller", "name phone city avatar createdAt").lean();
-    if (!listing) return null;
-    return normalize(JSON.parse(JSON.stringify(listing)));
+    const res = await fetch(`${BASE}/api/listings/${id}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.success || !data.listing) return null;
+    return normalize(data.listing);
   } catch { return null; }
 }
 
 async function getRelated(category: string, currentId: string) {
   try {
-    await connectDB();
-    const listings = await Listing.find({ isActive: true, category, _id: { $ne: currentId } })
-      .populate("seller", "name phone city avatar")
-      .limit(4)
-      .lean();
-    return JSON.parse(JSON.stringify(listings)).map(normalize);
+    const res = await fetch(`${BASE}/api/listings?category=${category}&limit=5`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.listings || [])
+      .filter((p: any) => String(p._id) !== currentId)
+      .slice(0, 4)
+      .map(normalize);
   } catch { return []; }
 }
 

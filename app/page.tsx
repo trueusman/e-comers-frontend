@@ -2,31 +2,23 @@ import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import CategoriesSection from "@/components/CategoriesSection";
 import HeroSlider from "@/components/HeroSlider";
-import connectDB from "@/lib/mongoose";
-import Listing from "@/models/Listing";
 import { Package, Search, Camera, MessageCircle, Handshake } from "lucide-react";
 
 async function getFeatured() {
   try {
-    await connectDB();
-    const listings = await Listing.find({ isActive: true, isFeatured: true })
-      .populate("seller", "name phone city avatar")
-      .sort({ createdAt: -1 })
-      .limit(12)
-      .lean();
-    return JSON.parse(JSON.stringify(listings));
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/listings/featured`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.listings || [];
   } catch { return []; }
 }
 
 async function getRecent() {
   try {
-    await connectDB();
-    const listings = await Listing.find({ isActive: true })
-      .populate("seller", "name phone city avatar")
-      .sort({ createdAt: -1 })
-      .limit(8)
-      .lean();
-    return JSON.parse(JSON.stringify(listings));
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/listings?limit=8`, { cache: "no-store" });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.listings || [];
   } catch { return []; }
 }
 
