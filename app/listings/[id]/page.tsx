@@ -5,49 +5,58 @@ import ProductCard from "@/components/ProductCard";
 import AddToCartButton from "@/components/AddToCartButton";
 import { formatPrice } from "@/lib/data";
 import { MapPin, Eye, Phone, MessageCircle, Bookmark, AlertTriangle, Star } from "lucide-react";
+import { readFileSync } from "fs";
+import { join } from "path";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
+const CITIES = ["Karachi","Lahore","Islamabad","Rawalpindi","Faisalabad","Multan","Peshawar","Quetta"];
+const CATEGORY_MAP: Record<string, string> = {
+  beauty: "fashion", fragrances: "fashion", furniture: "furniture",
+  groceries: "other", "home-decoration": "furniture", electronics: "electronics",
+  smartphones: "electronics", laptops: "electronics", vehicles: "vehicles",
+  sports: "sports", books: "books", fashion: "fashion",
+};
 
-function normalize(p: any) {
-  return {
-    _id:         String(p._id || p.id),
-    title:       p.title,
-    price:       p.price,
-    location:    p.location || "Online",
-    category:    p.category || "other",
-    condition:   p.condition || "New",
-    images:      Array.isArray(p.images) && p.images.length ? p.images : [p.thumbnail || "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400&q=80"],
-    isFeatured:  p.isFeatured || false,
+function loadAllProducts() {
+  const filePath = join(process.cwd(), "public", "products.json");
+  const raw = JSON.parse(readFileSync(filePath, "utf-8"));
+  const products = Array.isArray(raw) ? raw : (raw.products || []);
+  return products.map((p: any, i: number) => ({
+    _id:         String(p.id || i + 1),
+    title:       p.title || "Product",
     description: p.description || "",
-    seller:      p.seller || { name: "BazaarHub Team", phone: "0300-0000000", city: "" },
-    createdAt:   p.createdAt || new Date().toISOString(),
+    price:       Math.round((p.price || 0) * 280),
+    category:    CATEGORY_MAP[p.category?.toLowerCase()] || "other",
+    condition:   "New",
+    location:    CITIES[i % CITIES.length],
+    images:      Array.isArray(p.images) && p.images.length ? p.images : [p.thumbnail || "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400&q=80"],
+    isFeatured:  i % 5 === 0,
     rating:      p.rating || 0,
-    stock:       typeof p.stock === "number" ? p.stock : 1,
-    views:       typeof p.views === "number" ? p.views : 0,
-    phone:       p.phone || "",
+    stock:       p.stock || 1,
+    brand:       p.brand || "",
     reviews:     p.reviews || [],
-  };
+    discountPercentage: p.discountPercentage || 0,
+    seller:      { name: "BazaarHub Team", phone: "0300-0000000", city: CITIES[i % CITIES.length] },
+    createdAt:   new Date().toISOString(),
+    views:       i * 7,
+    phone:       "0300-0000000",
+  }));
 }
 
-async function getProduct(id: string) {
+function normalize(p: any) { return p; }
+
+function getProduct(id: string) {
   try {
-    const res = await fetch(`${BASE}/api/listings/${id}`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (!data.success || !data.listing) return null;
-    return normalize(data.listing);
+    const products = loadAllProducts();
+    return products.find((p: any) => p._id === id) || null;
   } catch { return null; }
 }
 
-async function getRelated(category: string, currentId: string) {
+function getRelated(category: string, currentId: string) {
   try {
-    const res = await fetch(`${BASE}/api/listings?category=${category}&limit=5`, { cache: "no-store" });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.listings || [])
-      .filter((p: any) => String(p._id) !== currentId)
-      .slice(0, 4)
-      .map(normalize);
+    const products = loadAllProducts();
+    return products
+      .filter((p: any) => p.category === category && p._id !== currentId)
+      .slice(0, 4);
   } catch { return []; }
 }
 
@@ -55,10 +64,10 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function ProductDetailPage({ params }: Props) {
   const { id }  = await params;
-  const product = await getProduct(id);
+  const product = getProduct(id);
   if (!product) notFound();
 
-  const related = await getRelated(product.category, id);
+  const related = getRelated(product.category, id);
   const postedAt = new Date(product.createdAt).toLocaleDateString("en-US", {
     day: "numeric", month: "long", year: "numeric",
   });

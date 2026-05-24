@@ -3,27 +3,51 @@ import ProductCard from "@/components/ProductCard";
 import CategoriesSection from "@/components/CategoriesSection";
 import HeroSlider from "@/components/HeroSlider";
 import { Package, Search, Camera, MessageCircle, Handshake } from "lucide-react";
+import { readFileSync } from "fs";
+import { join } from "path";
 
-async function getFeatured() {
+const CITIES = ["Karachi","Lahore","Islamabad","Rawalpindi","Faisalabad","Multan","Peshawar","Quetta"];
+const CATEGORY_MAP: Record<string, string> = {
+  beauty: "fashion", fragrances: "fashion", furniture: "furniture",
+  groceries: "other", "home-decoration": "furniture", electronics: "electronics",
+  smartphones: "electronics", laptops: "electronics", vehicles: "vehicles",
+  sports: "sports", books: "books", fashion: "fashion",
+};
+
+function loadProducts() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/listings/featured`, { cache: "no-store" });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.listings || [];
+    const filePath = join(process.cwd(), "public", "products.json");
+    const raw = JSON.parse(readFileSync(filePath, "utf-8"));
+    const products = Array.isArray(raw) ? raw : (raw.products || []);
+    return products.map((p: any, i: number) => ({
+      _id:        String(p.id || i + 1),
+      title:      p.title || "Product",
+      description: p.description || "",
+      price:      Math.round((p.price || 0) * 280),
+      category:   CATEGORY_MAP[p.category?.toLowerCase()] || "other",
+      condition:  "New",
+      location:   CITIES[i % CITIES.length],
+      images:     Array.isArray(p.images) && p.images.length ? p.images : [p.thumbnail || ""],
+      isFeatured: i % 5 === 0,
+      isActive:   true,
+      rating:     p.rating || 0,
+      stock:      p.stock || 1,
+      seller:     { name: "BazaarHub Team", city: CITIES[i % CITIES.length] },
+      createdAt:  new Date().toISOString(),
+    }));
   } catch { return []; }
 }
 
-async function getRecent() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"}/api/listings?limit=8`, { cache: "no-store" });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.listings || [];
-  } catch { return []; }
+function getFeatured() {
+  return loadProducts().filter((_: any, i: number) => i % 5 === 0).slice(0, 12);
+}
+
+function getRecent() {
+  return loadProducts().slice(0, 8);
 }
 
 export default async function HomePage() {
-  const [featured, recent] = await Promise.all([getFeatured(), getRecent()]);
+  const [featured, recent] = [getFeatured(), getRecent()];
 
   return (
     <div>
