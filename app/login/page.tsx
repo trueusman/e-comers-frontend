@@ -4,8 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Globe } from "lucide-react";
-import { backendFetch } from "@/lib/backend";
-
+// Simple fetch wrapper that adds auth token
 function backendFetch(path: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers || {});
   if (typeof window !== "undefined") {

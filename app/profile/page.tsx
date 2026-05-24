@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { backendFetch } from "@/lib/backend";
-
+// Simple fetch wrapper that adds auth token
 function backendFetch(path: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers || {});
   if (typeof window !== "undefined") {

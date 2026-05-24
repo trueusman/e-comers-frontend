@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Eye, EyeOff, Save } from "lucide-react";
-import { backendFetch } from "@/lib/backend";
-
+// Simple fetch wrapper that adds auth token
 function backendFetch(path: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers || {});
   if (typeof window !== "undefined") {
