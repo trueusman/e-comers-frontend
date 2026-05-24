@@ -1,5 +1,5 @@
 /**
- * Seed Script — dummy.json ka data MongoDB mein import karta hai
+ * Seed Script — ecommerce-batch-17 backend se products fetch karke Atlas mein save karta hai
  * Run: node scripts/seed.mjs
  */
 
@@ -11,7 +11,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// .env.local manually parse karo (dotenv ke bina)
+// .env.local manually parse karo
 function loadEnv() {
   try {
     const envPath = join(__dirname, "../.env.local");
@@ -33,14 +33,52 @@ function loadEnv() {
 loadEnv();
 
 const MONGODB_URI = process.env.MONGODB_URI;
+const SOURCE_API  = "https://ecommerce-batch-17-jyvv.vercel.app";
 
 if (!MONGODB_URI) {
   console.error("❌ MONGODB_URI .env.local mein set nahi hai!");
   process.exit(1);
 }
 
-// ── Schemas (inline, models folder se copy) ──────────────────
+// ── Category mapping (batch-17 → BazaarHub) ──────────────────
+const CATEGORY_MAP = {
+  smartphones:          "electronics",
+  laptops:              "electronics",
+  tablets:              "electronics",
+  "mobile-accessories": "electronics",
+  electronics:          "electronics",
+  vehicle:              "vehicles",
+  vehicles:             "vehicles",
+  motorcycle:           "vehicles",
+  property:             "property",
+  "home-decoration":    "furniture",
+  furniture:            "furniture",
+  fashion:              "fashion",
+  "womens-dresses":     "fashion",
+  "womens-bags":        "fashion",
+  "womens-shoes":       "fashion",
+  "mens-shirts":        "fashion",
+  "mens-shoes":         "fashion",
+  sunglasses:           "fashion",
+  fragrances:           "fashion",
+  beauty:               "fashion",
+  "skin-care":          "fashion",
+  sports:               "sports",
+  "sports-accessories": "sports",
+  books:                "books",
+  groceries:            "other",
+  "kitchen-accessories":"other",
+  tops:                 "fashion",
+  jobs:                 "jobs",
+};
 
+function mapCategory(cat) {
+  if (!cat) return "other";
+  const lower = cat.toLowerCase();
+  return CATEGORY_MAP[lower] || "other";
+}
+
+// ── Schemas ───────────────────────────────────────────────────
 const UserSchema = new mongoose.Schema(
   {
     name:     { type: String, required: true },
@@ -75,14 +113,26 @@ const ListingSchema = new mongoose.Schema(
 const User    = mongoose.models.User    || mongoose.model("User",    UserSchema);
 const Listing = mongoose.models.Listing || mongoose.model("Listing", ListingSchema);
 
-// ── Main ─────────────────────────────────────────────────────
+// ── Fetch products from batch-17 backend ─────────────────────
+async function fetchProducts() {
+  console.log(`🌐 ${SOURCE_API}/products se products fetch ho rahe hain...`);
+  const res = await fetch(`${SOURCE_API}/products`);
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  const data = await res.json();
 
+  // Handle both array and { products: [] } response shapes
+  const products = Array.isArray(data) ? data : (data.products || data.data || []);
+  console.log(`📦 ${products.length} products mile\n`);
+  return products;
+}
+
+// ── Main ─────────────────────────────────────────────────────
 async function seed() {
-  console.log("🔌 MongoDB se connect ho raha hun...");
+  console.log("🔌 MongoDB Atlas se connect ho raha hun...");
   await mongoose.connect(MONGODB_URI);
   console.log("✅ Connected!\n");
 
-  // 1. System seller user banao (agar pehle se nahi hai)
+  // 1. Seed seller user
   const sellerEmail = "seed@bazaarhub.com";
   let seller = await User.findOne({ email: sellerEmail });
 
@@ -96,45 +146,63 @@ async function seed() {
       city:     "Karachi",
       role:     "admin",
     });
-    console.log("👤 Seed seller user banaya:", seller.email);
+    console.log("👤 Seed seller banaya:", seller.email);
   } else {
-    console.log("👤 Seed seller pehle se maujood hai:", seller.email);
+    console.log("👤 Seed seller pehle se hai:", seller.email);
   }
 
-  // 2. dummy.json load karo
-  const dummyPath = join(__dirname, "../public/dummy.json");
-  const dummies   = JSON.parse(readFileSync(dummyPath, "utf-8"));
-  console.log(`\n📦 ${dummies.length} listings dummy.json mein mili\n`);
+  // 2. Products fetch karo
+  const products = await fetchProducts();
 
-  // 3. Har listing MongoDB mein save karo
+  // 3. Atlas mein save karo
   let created = 0;
   let skipped = 0;
 
-  for (const item of dummies) {
-    // Duplicate check — same title aur seller
-    const exists = await Listing.findOne({ title: item.title, seller: seller._id });
+  const cities = ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta"];
+
+  for (const p of products) {
+    const title = p.title || p.name || "Untitled";
+
+    // Duplicate check
+    const exists = await Listing.findOne({ title, seller: seller._id });
     if (exists) {
-      console.log(`⏭  Skip (pehle se hai): ${item.title}`);
       skipped++;
       continue;
     }
 
+    // Images — handle different shapes
+    let images = [];
+    if (Array.isArray(p.images) && p.images.length > 0) {
+      images = p.images.filter(Boolean);
+    } else if (p.image) {
+      images = [p.image];
+    } else if (p.thumbnail) {
+      images = [p.thumbnail];
+    }
+
+    // Price — convert to PKR (approx 1 USD = 280 PKR)
+    const priceUSD = p.price || 0;
+    const pricePKR = Math.round(priceUSD * 280);
+
+    const category = mapCategory(p.category);
+    const city     = cities[Math.floor(Math.random() * cities.length)];
+
     await Listing.create({
-      title:       item.title,
-      description: item.description,
-      price:       item.price,
-      category:    item.category,
-      condition:   item.condition,
-      location:    item.location,
-      images:      item.images || [],
+      title,
+      description: p.description || title,
+      price:       pricePKR,
+      category,
+      condition:   "New",
+      location:    city,
+      images,
       seller:      seller._id,
-      isFeatured:  item.isFeatured || false,
+      isFeatured:  Math.random() < 0.2, // 20% featured
       isActive:    true,
-      views:       item.views || 0,
-      phone:       item.seller?.phone || "",
+      views:       Math.floor(Math.random() * 100),
+      phone:       "0300-0000000",
     });
 
-    console.log(`✅ Saved: ${item.title}`);
+    console.log(`✅ [${category}] ${title} — Rs ${pricePKR.toLocaleString()}`);
     created++;
   }
 
