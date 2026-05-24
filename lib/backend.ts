@@ -1,4 +1,4 @@
-export const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3000";
+export const BACKEND_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "https://ecommerce-batch-17-jyvv.vercel.app";
 
 export async function backendFetch(path: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers || {});

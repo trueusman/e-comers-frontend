@@ -4,8 +4,9 @@ import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import AddToCartButton from "@/components/AddToCartButton";
 import { formatPrice } from "@/lib/data";
-import { backendFetch, mapCategoryToBackend } from "@/lib/backend";
 import { MapPin, Eye, Phone, MessageCircle, Bookmark, AlertTriangle, Star } from "lucide-react";
+
+const BATCH17_API = "https://ecommerce-batch-17-jyvv.vercel.app";
 
 function normalize(p: any) {
   return {
@@ -30,25 +31,23 @@ function normalize(p: any) {
 
 async function getProduct(id: string) {
   try {
-    const res = await backendFetch(`/api/listings/${id}`);
+    const res = await fetch(`${BATCH17_API}/products/${id}`, { next: { revalidate: 3600 } });
     if (!res.ok) return null;
     const data = await res.json();
-    return normalize(data.listing);
+    return normalize(data);
   } catch {
     return null;
   }
 }
 
 async function getRelated(category: string, currentId: string) {
-  const backendCategory = mapCategoryToBackend(category);
-  if (!backendCategory) return [];
-
   try {
-    const res = await backendFetch(`/api/listings?category=${encodeURIComponent(backendCategory)}&limit=5`);
+    const res = await fetch(`${BATCH17_API}/products`, { next: { revalidate: 3600 } });
     if (!res.ok) return [];
     const data = await res.json();
-    return (data.listings || [])
-      .filter((p: any) => String(p._id || p.id) !== currentId)
+    const products = Array.isArray(data) ? data : (data.products || []);
+    return products
+      .filter((p: any) => p.category === category && String(p.id || p._id) !== currentId)
       .slice(0, 4)
       .map(normalize);
   } catch {

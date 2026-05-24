@@ -2,19 +2,32 @@ import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import CategoriesSection from "@/components/CategoriesSection";
 import HeroSlider from "@/components/HeroSlider";
-import connectDB from "@/lib/mongoose";
-import Listing from "@/models/Listing";
 import { Package, Search, Camera, MessageCircle, Handshake } from "lucide-react";
+
+const BATCH17_API = "https://ecommerce-batch-17-jyvv.vercel.app";
+
+function normalize(p: any) {
+  return {
+    _id:        String(p.id || p._id),
+    title:      p.title,
+    price:      p.price,
+    location:   p.location || "Online",
+    category:   p.category || "other",
+    condition:  p.condition || "New",
+    images:     Array.isArray(p.images) && p.images.length ? p.images : [p.thumbnail || p.image || ""],
+    isFeatured: p.isFeatured || false,
+    rating:     p.rating || 0,
+    seller:     p.seller || { name: "Seller" },
+  };
+}
 
 async function getFeatured() {
   try {
-    await connectDB();
-    const listings = await Listing.find({ isActive: true, isFeatured: true })
-      .populate("seller", "name phone city avatar")
-      .sort({ createdAt: -1 })
-      .limit(12)
-      .lean();
-    return JSON.parse(JSON.stringify(listings));
+    const res = await fetch(`${BATCH17_API}/products`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const products = Array.isArray(data) ? data : (data.products || []);
+    return products.slice(0, 12).map(normalize);
   } catch {
     return [];
   }
@@ -22,13 +35,11 @@ async function getFeatured() {
 
 async function getRecent() {
   try {
-    await connectDB();
-    const listings = await Listing.find({ isActive: true })
-      .populate("seller", "name phone city avatar")
-      .sort({ createdAt: -1 })
-      .limit(8)
-      .lean();
-    return JSON.parse(JSON.stringify(listings));
+    const res = await fetch(`${BATCH17_API}/products`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    const products = Array.isArray(data) ? data : (data.products || []);
+    return products.slice(12, 20).map(normalize);
   } catch {
     return [];
   }

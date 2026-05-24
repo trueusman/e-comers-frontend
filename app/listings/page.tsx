@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
-import { backendFetch, mapCategoryToBackend } from "@/lib/backend";
-import {
+import { backendFetch, mapCategoryToBackend } from "@/lib/backend";import {
   Smartphone, Laptop, Tablet, Plug, Car, Bike,
   Sofa, Home, Trophy, Sparkles, Leaf, Shirt,
   ShoppingBag, Watch, Gem, Utensils, BookOpen,
@@ -61,21 +60,42 @@ function ListingsContent() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      const backendCategory = mapCategoryToBackend(category);
-      const params = new URLSearchParams();
-      params.set("limit", "100");
-      if (searchQuery.trim()) params.set("q", searchQuery.trim());
-      if (backendCategory) params.set("category", backendCategory);
-      if (sortBy !== "default") params.set("sort", sortBy);
-
-      const res = await backendFetch(`/api/listings?${params.toString()}`);
-      if (!res.ok) {
-        setProducts([]);
-        setTotal(0);
-        return;
-      }
+      const res = await fetch("https://ecommerce-batch-17-jyvv.vercel.app/products");
+      if (!res.ok) { setProducts([]); setTotal(0); return; }
       const data = await res.json();
-      const result = data.listings || [];
+      let result = Array.isArray(data) ? data : (data.products || []);
+
+      // Normalize
+      result = result.map((p: any) => ({
+        _id:        String(p.id || p._id),
+        title:      p.title,
+        price:      p.price,
+        location:   p.location || "Online",
+        category:   p.category || "other",
+        condition:  p.condition || "New",
+        images:     Array.isArray(p.images) && p.images.length ? p.images : [p.thumbnail || p.image || ""],
+        isFeatured: p.isFeatured || false,
+        rating:     p.rating || 0,
+        seller:     p.seller || { name: "Seller" },
+      }));
+
+      // Client-side filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        result = result.filter((p: any) =>
+          p.title.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
+        );
+      }
+      if (category) {
+        result = result.filter((p: any) =>
+          p.category.toLowerCase().includes(category.toLowerCase())
+        );
+      }
+
+      // Sort
+      if (sortBy === "price-asc")  result.sort((a: any, b: any) => a.price - b.price);
+      if (sortBy === "price-desc") result.sort((a: any, b: any) => b.price - a.price);
+
       setProducts(result);
       setTotal(result.length);
     } catch (err) {
