@@ -2,48 +2,36 @@ import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import CategoriesSection from "@/components/CategoriesSection";
 import HeroSlider from "@/components/HeroSlider";
-import { categories, formatPrice } from "@/lib/data";
-import {
-  Package, Search, Camera, MessageCircle, Handshake,
-} from "lucide-react";
-
-const DUMMYJSON = "https://dummyjson.com";
-
-// Normalize DummyJSON product → our ProductCard shape
-function normalize(p: any) {
-  return {
-    _id:       String(p.id),
-    title:     p.title,
-    price:     p.price,
-    location:  p.brand || "Online",
-    category:  p.category,
-    condition: p.stock > 0 ? "New" : "Used",
-    images:    p.images?.length ? p.images : [p.thumbnail],
-    isFeatured: p.rating >= 4.5,
-    seller:    { name: p.brand || "Seller", phone: "", city: "" },
-    createdAt: p.meta?.createdAt || new Date().toISOString(),
-    rating:    p.rating,
-    stock:     p.stock,
-  };
-}
+import connectDB from "@/lib/mongoose";
+import Listing from "@/models/Listing";
+import { Package, Search, Camera, MessageCircle, Handshake } from "lucide-react";
 
 async function getFeatured() {
   try {
-    const res  = await fetch(`${DUMMYJSON}/products?limit=100&select=id,title,price,brand,category,images,thumbnail,rating,stock,meta`, { cache: "no-store" });
-    const data = await res.json();
-    return data.products
-      .filter((p: any) => p.rating >= 4.5)
-      .slice(0, 4)
-      .map(normalize);
-  } catch { return []; }
+    await connectDB();
+    const listings = await Listing.find({ isActive: true, isFeatured: true })
+      .populate("seller", "name phone city avatar")
+      .sort({ createdAt: -1 })
+      .limit(12)
+      .lean();
+    return JSON.parse(JSON.stringify(listings));
+  } catch {
+    return [];
+  }
 }
 
 async function getRecent() {
   try {
-    const res  = await fetch(`${DUMMYJSON}/products?limit=8&skip=10&select=id,title,price,brand,category,images,thumbnail,rating,stock,meta`, { cache: "no-store" });
-    const data = await res.json();
-    return data.products.map(normalize);
-  } catch { return []; }
+    await connectDB();
+    const listings = await Listing.find({ isActive: true })
+      .populate("seller", "name phone city avatar")
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .lean();
+    return JSON.parse(JSON.stringify(listings));
+  } catch {
+    return [];
+  }
 }
 
 export default async function HomePage() {

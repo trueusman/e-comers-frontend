@@ -4,49 +4,56 @@ import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import AddToCartButton from "@/components/AddToCartButton";
 import { formatPrice } from "@/lib/data";
+import { backendFetch, mapCategoryToBackend } from "@/lib/backend";
 import { MapPin, Eye, Phone, MessageCircle, Bookmark, AlertTriangle, Star } from "lucide-react";
-
-const DUMMYJSON = "https://dummyjson.com";
 
 function normalize(p: any) {
   return {
-    _id:       String(p.id),
-    title:     p.title,
-    price:     p.price,
-    location:  p.brand || "Online",
-    category:  p.category,
-    condition: p.stock > 0 ? "New" : "Used",
-    images:    p.images?.length ? p.images : [p.thumbnail],
-    isFeatured: p.rating >= 4.5,
-    description: p.description,
-    seller:    { name: p.brand || "Seller", phone: "", city: p.brand || "" },
-    createdAt: p.meta?.createdAt || new Date().toISOString(),
-    rating:    p.rating,
-    stock:     p.stock,
-    views:     p.stock * 3,
-    phone:     "",
-    reviews:   p.reviews || [],
+    _id:         String(p._id || p.id),
+    title:       p.title,
+    price:       p.price,
+    location:    p.location || "Online",
+    category:    p.category || "other",
+    condition:   p.condition || "Used",
+    images:      Array.isArray(p.images) && p.images.length ? p.images : [p.image || "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=400&q=80"],
+    isFeatured:  p.isFeatured || false,
+    description: p.description || "",
+    seller:      p.seller || { name: "Seller", phone: "", city: "" },
+    createdAt:   p.createdAt || new Date().toISOString(),
+    rating:      p.rating || 0,
+    stock:       typeof p.stock === "number" ? p.stock : 1,
+    views:       typeof p.views === "number" ? p.views : 0,
+    phone:       p.phone || "",
+    reviews:     p.reviews || [],
   };
 }
 
 async function getProduct(id: string) {
   try {
-    const res  = await fetch(`${DUMMYJSON}/products/${id}`, { cache: "no-store" });
+    const res = await backendFetch(`/api/listings/${id}`);
     if (!res.ok) return null;
     const data = await res.json();
-    return normalize(data);
-  } catch { return null; }
+    return normalize(data.listing);
+  } catch {
+    return null;
+  }
 }
 
 async function getRelated(category: string, currentId: string) {
+  const backendCategory = mapCategoryToBackend(category);
+  if (!backendCategory) return [];
+
   try {
-    const res  = await fetch(`${DUMMYJSON}/products/category/${category}?limit=5`, { cache: "no-store" });
+    const res = await backendFetch(`/api/listings?category=${encodeURIComponent(backendCategory)}&limit=5`);
+    if (!res.ok) return [];
     const data = await res.json();
-    return (data.products || [])
-      .filter((p: any) => String(p.id) !== currentId)
+    return (data.listings || [])
+      .filter((p: any) => String(p._id || p.id) !== currentId)
       .slice(0, 4)
       .map(normalize);
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 interface Props { params: Promise<{ id: string }> }

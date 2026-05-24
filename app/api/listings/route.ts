@@ -1,42 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync } from "fs";
-import { join } from "path";
-
-// Load dummy.json from public folder (server-side only)
-function getDummyListings() {
-  try {
-    const filePath = join(process.cwd(), "public", "dummy.json");
-    const raw = readFileSync(filePath, "utf-8");
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-// Helper: try MongoDB
-async function getFromDB(filter: any, sortOption: any, skip: number, limit: number) {
-  try {
-    const connectDB = (await import("@/lib/mongoose")).default;
-    const Listing   = (await import("@/models/Listing")).default;
-    await connectDB();
-
-    const total    = await Listing.countDocuments(filter);
-    const listings = await Listing.find(filter)
-      .populate("seller", "name phone city avatar")
-      .sort(sortOption)
-      .skip(skip)
-      .limit(limit)
-      .lean();
-
-    return { listings, total, source: "db" };
-  } catch {
-    return null; // fallback to dummy.json
-  }
-}
+import connectDB from "@/lib/mongoose";
+import Listing from "@/models/Listing";
 
 // GET /api/listings
 export async function GET(req: NextRequest) {
   try {
+    await connectDB();
+
     const { searchParams } = new URL(req.url);
     const category  = searchParams.get("category") || "";
     const condition = searchParams.get("condition") || "";
@@ -49,18 +19,20 @@ export async function GET(req: NextRequest) {
     const page      = Number(searchParams.get("page")  || 1);
     const limit     = Number(searchParams.get("limit") || 20);
 
-    // ── Try MongoDB first ──────────────────────────────────
-    const dbFilter: any = { isActive: true };
-    if (category)  dbFilter.category  = category;
-    if (condition) dbFilter.condition = condition;
-    if (location)  dbFilter.location  = new RegExp(location, "i");
-    if (featured === "true") dbFilter.isFeatured = true;
+    const filter: any = { isActive: true };
+    if (category)  filter.category  = category;
+    if (condition) filter.condition = condition;
+    if (location)  filter.location  = new RegExp(location, "i");
+    if (featured === "true") filter.isFeatured = true;
     if (minPrice || maxPrice) {
-      dbFilter.price = {};
-      if (minPrice) dbFilter.price.$gte = Number(minPrice);
-      if (maxPrice) dbFilter.price.$lte = Number(maxPrice);
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
     }
-    if (q) dbFilter.title = new RegExp(q, "i");
+    if (q) filter.$or = [
+      { title: new RegExp(q, "i") },
+      { description: new RegExp(q, "i") },
+    ];
 
     const sortMap: any = {
       newest:       { createdAt: -1 },
@@ -69,43 +41,13 @@ export async function GET(req: NextRequest) {
       "price-desc": { price: -1 },
     };
 
-    const dbResult = await getFromDB(dbFilter, sortMap[sort] || { createdAt: -1 }, (page - 1) * limit, limit);
-
-    if (dbResult) {
-      return NextResponse.json({
-        success: true,
-        total:   dbResult.total,
-        page,
-        pages:   Math.ceil(dbResult.total / limit),
-        listings: dbResult.listings,
-        source: "mongodb",
-      });
-    }
-
-    // ── Fallback: dummy.json with in-memory filtering ─────
-    let result = getDummyListings() as any[];
-
-    if (category)  result = result.filter((l: any) => l.category  === category);
-    if (condition) result = result.filter((l: any) => l.condition === condition);
-    if (location)  result = result.filter((l: any) => l.location.toLowerCase().includes(location.toLowerCase()));
-    if (featured === "true") result = result.filter((l: any) => l.isFeatured === true);
-    if (minPrice)  result = result.filter((l: any) => l.price >= Number(minPrice));
-    if (maxPrice)  result = result.filter((l: any) => l.price <= Number(maxPrice));
-    if (q)         result = result.filter((l: any) =>
-      l.title.toLowerCase().includes(q.toLowerCase()) ||
-      l.description.toLowerCase().includes(q.toLowerCase())
-    );
-
-    // Sort
-    if (sort === "price-asc")  result.sort((a, b) => a.price - b.price);
-    if (sort === "price-desc") result.sort((a, b) => b.price - a.price);
-    if (sort === "newest")     result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-    const total     = result.length;
-    const paginated = result.slice((page - 1) * limit, page * limit);
-
-    // Ensure _id field exists for frontend compatibility
-    const listings = paginated.map((l: any) => ({ ...l, _id: l._id || l.id }));
+    const total    = await Listing.countDocuments(filter);
+    const listings = await Listing.find(filter)
+      .populate("seller", "name phone city avatar")
+      .sort(sortMap[sort] || { createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
 
     return NextResponse.json({
       success: true,
@@ -113,7 +55,6 @@ export async function GET(req: NextRequest) {
       page,
       pages: Math.ceil(total / limit),
       listings,
-      source: "dummy",
     });
 
   } catch (error: any) {
@@ -124,9 +65,7 @@ export async function GET(req: NextRequest) {
 // POST /api/listings — create listing (protected)
 export async function POST(req: NextRequest) {
   try {
-    const connectDB = (await import("@/lib/mongoose")).default;
-    const Listing   = (await import("@/models/Listing")).default;
-    const jwt       = (await import("jsonwebtoken")).default;
+    const jwt = (await import("jsonwebtoken")).default;
 
     await connectDB();
 

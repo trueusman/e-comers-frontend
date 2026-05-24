@@ -4,14 +4,13 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
+import { backendFetch, mapCategoryToBackend } from "@/lib/backend";
 import {
   Smartphone, Laptop, Tablet, Plug, Car, Bike,
   Sofa, Home, Trophy, Sparkles, Leaf, Shirt,
   ShoppingBag, Watch, Gem, Utensils, BookOpen,
   Package, SearchX, SlidersHorizontal, X, ChevronDown,
 } from "lucide-react";
-
-const DUMMYJSON = "https://dummyjson.com";
 
 const ALL_CATS = [
   { name: "All",                  slug: "",                      Icon: Package    },
@@ -41,23 +40,6 @@ const ALL_CATS = [
   { name: "Tops",                 slug: "tops",                  Icon: Shirt      },
 ];
 
-function normalize(p: any) {
-  return {
-    _id:        String(p.id),
-    title:      p.title,
-    price:      p.price,
-    location:   p.brand || "Online",
-    category:   p.category,
-    condition:  p.stock > 0 ? "New" : "Used",
-    images:     p.images?.length ? p.images : [p.thumbnail],
-    isFeatured: p.rating >= 4.5,
-    seller:     { name: p.brand || "Seller", phone: "", city: "" },
-    createdAt:  p.meta?.createdAt || new Date().toISOString(),
-    rating:     p.rating,
-    stock:      p.stock,
-  };
-}
-
 function ListingsContent() {
   const searchParams = useSearchParams();
   const router       = useRouter();
@@ -79,24 +61,27 @@ function ListingsContent() {
   const fetchProducts = useCallback(async () => {
     setLoading(true);
     try {
-      let url = "";
-      if (searchQuery.trim()) {
-        url = `${DUMMYJSON}/products/search?q=${encodeURIComponent(searchQuery.trim())}&limit=100`;
-      } else if (category) {
-        url = `${DUMMYJSON}/products/category/${category}?limit=100`;
-      } else {
-        url = `${DUMMYJSON}/products?limit=100`;
+      const backendCategory = mapCategoryToBackend(category);
+      const params = new URLSearchParams();
+      params.set("limit", "100");
+      if (searchQuery.trim()) params.set("q", searchQuery.trim());
+      if (backendCategory) params.set("category", backendCategory);
+      if (sortBy !== "default") params.set("sort", sortBy);
+
+      const res = await backendFetch(`/api/listings?${params.toString()}`);
+      if (!res.ok) {
+        setProducts([]);
+        setTotal(0);
+        return;
       }
-      const res  = await fetch(url);
       const data = await res.json();
-      let result = (data.products || []).map(normalize);
-      if (sortBy === "price-asc")   result.sort((a: any, b: any) => a.price - b.price);
-      if (sortBy === "price-desc")  result.sort((a: any, b: any) => b.price - a.price);
-      if (sortBy === "rating-desc") result.sort((a: any, b: any) => b.rating - a.rating);
+      const result = data.listings || [];
       setProducts(result);
       setTotal(result.length);
     } catch (err) {
       console.error(err);
+      setProducts([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -179,9 +164,11 @@ function ListingsContent() {
             <span className="hidden sm:inline">Sort: </span>
             <span className="font-medium">
               {sortBy === "default"      ? "Default"
-               : sortBy === "price-asc"  ? "Price ↑"
-               : sortBy === "price-desc" ? "Price ↓"
-               : "Top Rated"}
+               : sortBy === "newest"       ? "Newest"
+               : sortBy === "oldest"       ? "Oldest"
+               : sortBy === "price-asc"    ? "Price ↑"
+               : sortBy === "price-desc"   ? "Price ↓"
+               : "Default"}
             </span>
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showSort ? "rotate-180" : ""}`} />
           </button>
@@ -190,9 +177,10 @@ function ListingsContent() {
             <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-30 min-w-[160px] py-1">
               {[
                 { val: "default",      label: "Default"           },
+                { val: "newest",       label: "Newest"            },
+                { val: "oldest",       label: "Oldest"            },
                 { val: "price-asc",    label: "Price: Low → High" },
                 { val: "price-desc",   label: "Price: High → Low" },
-                { val: "rating-desc",  label: "Top Rated"         },
               ].map((opt) => (
                 <button key={opt.val}
                   onClick={() => { setSortBy(opt.val); setShowSort(false); }}

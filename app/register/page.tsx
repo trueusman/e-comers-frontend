@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Globe } from "lucide-react";
+import { backendFetch } from "@/lib/backend";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      const res  = await fetch("/api/auth/register", {
+      const res  = await backendFetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -75,6 +76,17 @@ export default function RegisterPage() {
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+          <button
+            type="button"
+            onClick={() => {
+              const backend = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+              window.location.href = `${backend}/api/auth/google`;
+            }}
+            className="w-full inline-flex items-center justify-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors rounded-2xl py-3 mb-6 font-semibold"
+          >
+            <Globe className="w-5 h-5" />
+            Continue with Google
+          </button>
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
           )}

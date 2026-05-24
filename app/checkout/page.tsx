@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cartContext";
+import { useAuthGuard } from "@/lib/useAuthGuard";
+import LoginModal from "@/components/LoginModal";
 import { Banknote, CreditCard, Smartphone, ChevronRight, ChevronLeft, Check, MapPin, Plus, CheckCircle, Package, ShoppingBag, X } from "lucide-react";
 
 const CITIES = ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Peshawar", "Quetta", "Multan"];
@@ -34,6 +36,12 @@ type PaymentMethod = "cod" | "card" | "easypaisa" | "jazzcash";
 export default function CheckoutPage() {
   const router = useRouter();
   const { cartItems, cartTotal, clearCart } = useCart();
+  const { guard, showLoginModal, closeModal, goToLogin, goToRegister } = useAuthGuard();
+
+  // Login check on mount
+  useEffect(() => {
+    guard();
+  }, []);
 
   const delivery = cartTotal >= DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const orderTotal = cartTotal + delivery;
@@ -167,6 +175,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
+      {showLoginModal && <LoginModal onClose={closeModal} onLogin={goToLogin} onRegister={goToRegister} />}
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Checkout</h1>
 
       {/* ── Progress Indicator ── */}

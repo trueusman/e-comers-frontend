@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Eye, EyeOff, Save } from "lucide-react";
+import { backendFetch } from "@/lib/backend";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function SettingsPage() {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("/api/auth/change-password", {
+      const res = await backendFetch("/api/auth/change-password", {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ currentPassword: form.currentPassword, newPassword: form.newPassword }),

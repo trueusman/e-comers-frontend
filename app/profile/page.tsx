@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { backendFetch } from "@/lib/backend";
 import {
   User, Mail, Phone, MapPin, Save, CreditCard,
   Plus, Trash2, Package, ChevronRight, Edit2, Check, X, Camera,
@@ -36,17 +37,70 @@ export default function ProfilePage() {
   useEffect(() => {
     const stored = localStorage.getItem("user");
     if (!stored) { router.push("/login"); return; }
-    const u = JSON.parse(stored);
-    setUser(u);
-    setForm({ name: u.name || "", email: u.email || "", phone: u.phone || "", city: u.city || "" });
-    setAvatarUrl(u.avatar || "");
+
+    const initialUser = JSON.parse(stored);
+    setUser(initialUser);
+    setForm({ name: initialUser.name || "", email: initialUser.email || "", phone: initialUser.phone || "", city: initialUser.city || "" });
+    setAvatarUrl(initialUser.avatar || "");
+
     const c = localStorage.getItem("savedCards");
     if (c) setCards(JSON.parse(c));
     const a = localStorage.getItem("savedAddresses");
     if (a) setAddresses(JSON.parse(a));
     const o = localStorage.getItem("orders");
     if (o) setOrders(JSON.parse(o));
+
+    const fetchProfile = async () => {
+      try {
+        const res = await backendFetch("/api/auth/me");
+        const data = await res.json();
+        if (data.success && data.user) {
+          setUser(data.user);
+          setForm({ name: data.user.name || "", email: data.user.email || "", phone: data.user.phone || "", city: data.user.city || "" });
+          setAvatarUrl(data.user.avatar || "");
+          localStorage.setItem("user", JSON.stringify(data.user));
+          window.dispatchEvent(new Event("userChanged"));
+        }
+      } catch {
+        // Leave existing localStorage user in place when backend is unavailable
+      }
+    };
+
+    fetchProfile();
   }, [router]);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const updatedFields = { name: form.name, phone: form.phone, city: form.city };
+
+    try {
+      const res = await backendFetch("/api/auth/update-profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedFields),
+      });
+      const data = await res.json();
+
+      if (data.success && data.user) {
+        const updatedUser = { ...user, ...data.user };
+        setUser(updatedUser);
+        setForm({ name: updatedUser.name || "", email: updatedUser.email || "", phone: updatedUser.phone || "", city: updatedUser.city || "" });
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        window.dispatchEvent(new Event("userChanged"));
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2500);
+      } else {
+        setSaved(false);
+      }
+    } catch {
+      const updatedUser = { ...user, ...updatedFields };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      window.dispatchEvent(new Event("userChanged"));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    }
+  };
 
   // Handle avatar image upload — saves to backend, not just localStorage
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +114,7 @@ export default function ProfilePage() {
     formData.append("avatar", file);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"}/api/auth/avatar`, {
+      const res = await backendFetch("/api/auth/avatar", {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -86,16 +140,6 @@ export default function ProfilePage() {
       };
       reader.readAsDataURL(file);
     }
-  };
-
-  const handleSaveProfile = (e: React.FormEvent) => {
-    e.preventDefault();
-    const updated = { ...user, ...form };
-    localStorage.setItem("user", JSON.stringify(updated));
-    setUser(updated);
-    window.dispatchEvent(new Event("userChanged"));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
   };
 
   const addCard = (e: React.FormEvent) => {

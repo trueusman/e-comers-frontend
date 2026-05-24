@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { categories } from "@/lib/data";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { backendFetch } from "@/lib/backend";
+import { useAuthGuard } from "@/lib/useAuthGuard";
+import LoginModal from "@/components/LoginModal";
 import {
   Smartphone,
   Car,
@@ -36,11 +39,17 @@ export default function PostAdPage() {
   const [loading, setLoading]     = useState(false);
   const [error, setError]         = useState("");
   const [newListingId, setNewListingId] = useState("");
+  const { guard, showLoginModal, closeModal, goToLogin, goToRegister } = useAuthGuard();
 
   const [form, setForm] = useState({
     category: "", title: "", description: "",
     price: "", condition: "", location: "", phone: "",
   });
+
+  // Check login on mount
+  useEffect(() => {
+    guard();
+  }, []);
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -58,7 +67,7 @@ export default function PostAdPage() {
     }
 
     try {
-      const res = await fetch("/api/listings", {
+      const res = await backendFetch("/api/listings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -110,6 +119,7 @@ export default function PostAdPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
+      {showLoginModal && <LoginModal onClose={closeModal} onLogin={goToLogin} onRegister={goToRegister} />}
       <div className="mb-6">
         <nav className="text-sm text-gray-500 mb-3">
           <Link href="/" className="hover:text-[#0f172a]">Home</Link>

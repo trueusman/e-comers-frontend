@@ -4,6 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Trash2, Plus, Minus, ShoppingCart } from "lucide-react";
 import { useCart } from "@/lib/cartContext";
+import { useAuthGuard } from "@/lib/useAuthGuard";
+import LoginModal from "@/components/LoginModal";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const DELIVERY_THRESHOLD = 2000;
 const DELIVERY_FEE = 200;
@@ -13,14 +17,23 @@ function formatPrice(n: number) {
 }
 
 export default function CartPage() {
+  const router = useRouter();
   const { cartItems, cartCount, cartTotal, removeFromCart, updateQty } = useCart();
+  const { guard, showLoginModal, closeModal, goToLogin, goToRegister } = useAuthGuard();
+
+  // Login check on mount
+  useEffect(() => {
+    guard();
+  }, []);
 
   const delivery = cartTotal >= DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
   const orderTotal = cartTotal + delivery;
 
   if (cartCount === 0) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 px-4">
+      <>
+        {showLoginModal && <LoginModal onClose={closeModal} onLogin={goToLogin} onRegister={goToRegister} />}
+        <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 px-4">
         <div className="w-24 h-24 rounded-full bg-[#0f172a]/10 flex items-center justify-center">
           <ShoppingCart className="w-12 h-12 text-[#0f172a]" />
         </div>
@@ -34,12 +47,15 @@ export default function CartPage() {
             Browse Products
           </Link>
         </div>
-      </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <>
+      {showLoginModal && <LoginModal onClose={closeModal} onLogin={goToLogin} onRegister={goToRegister} />}
+      <div className="max-w-6xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">
         Shopping Cart{" "}
         <span className="text-base font-normal text-gray-500">({cartCount} items)</span>
@@ -157,6 +173,7 @@ export default function CartPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
