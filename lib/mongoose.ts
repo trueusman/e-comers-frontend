@@ -19,7 +19,6 @@ async function connectDB() {
     cached.promise = mongoose
       .connect(MONGODB_URI, {
         serverSelectionTimeoutMS: 10000,
-        tlsInsecure: true,
       })
       .then((m) => m)
       .catch((err) => {
