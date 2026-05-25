@@ -11,7 +11,9 @@ function backendFetch(path: string, options: RequestInit = {}) {
     const token = localStorage.getItem("token");
     if (token && !headers.has("Authorization")) headers.set("Authorization", `Bearer ${token}`);
   }
-  return fetch(path, { ...options, headers });
+  const backend = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+  const url = path.startsWith("http") ? path : `${backend}${path}`;
+  return fetch(url, { ...options, headers });
 }
 
 export default function LoginPage() {
@@ -42,8 +44,9 @@ export default function LoginPage() {
       } else {
         setError(data.message);
       }
-    } catch {
-      setError("Network error. Please try again.");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(err?.message || "Network error. Please try again.");
     } finally {
       setLoading(false);
     }
