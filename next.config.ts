@@ -1,6 +1,28 @@
 import type { NextConfig } from "next";
 
+const apiBase = (
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  process.env.BACKEND_URL ||
+  ""
+).replace(/\/$/, "");
+
+let apiHostname: string | undefined;
+try {
+  if (apiBase) apiHostname = new URL(apiBase).hostname;
+} catch {
+  apiHostname = undefined;
+}
+
 const nextConfig: NextConfig = {
+  async rewrites() {
+    if (!apiBase) return [];
+    return [
+      {
+        source: "/express/:path*",
+        destination: `${apiBase}/:path*`,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
@@ -22,18 +44,15 @@ const nextConfig: NextConfig = {
         hostname: "api.dicebear.com",
         pathname: "/**",
       },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "5000",
-        pathname: "/uploads/**",
-      },
-      {
-        protocol: "http",
-        hostname: "192.168.100.65",
-        port: "5000",
-        pathname: "/uploads/**",
-      },
+      ...(apiHostname
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: apiHostname,
+              pathname: "/uploads/**",
+            },
+          ]
+        : []),
     ],
   },
 };

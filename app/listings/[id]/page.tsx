@@ -4,12 +4,11 @@ import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
 import AddToCartButton from "@/components/AddToCartButton";
 import { formatPrice } from "@/lib/data";
+import { getBackendBase } from "@/lib/backend";
 import { MapPin, Eye, Phone, MessageCircle, Bookmark, AlertTriangle, Star } from "lucide-react";
 import { readFileSync } from "fs";
 import { join } from "path";
 
-// ─── Constants ────────────────────────────────────────────────
-const BACKEND = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 const CITIES  = ["Karachi","Lahore","Islamabad","Rawalpindi","Faisalabad","Multan","Peshawar","Quetta"];
 const CATEGORY_MAP: Record<string, string> = {
   beauty: "fashion", fragrances: "fashion", furniture: "furniture",
@@ -63,7 +62,8 @@ async function getProduct(id: string) {
   // ── MongoDB product (from Post Ad / seed) ──
   if (isMongoId(id)) {
     try {
-      const res = await fetch(`${BACKEND}/api/listings/${id}`, {
+      const api = getBackendBase();
+      const res = await fetch(`${api}/api/listings/${id}`, {
         cache: "no-store",
       });
       if (res.ok) {
@@ -84,8 +84,9 @@ async function getProduct(id: string) {
 async function getRelated(category: string, currentId: string) {
   if (isMongoId(currentId)) {
     try {
+      const api = getBackendBase();
       const res = await fetch(
-        `${BACKEND}/api/listings?category=${category}&limit=5`,
+        `${api}/api/listings?category=${category}&limit=5`,
         { cache: "no-store" }
       );
       if (res.ok) {

@@ -17,7 +17,8 @@ bun dev
 This frontend now connects to a separate backend API. Create a `.env.local` file with:
 
 ```bash
-NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
+NEXT_PUBLIC_BACKEND_URL=https://e-commers-backend.onrender.com
+BACKEND_URL=https://e-commers-backend.onrender.com
 ```
 
 Then open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
