@@ -1,0 +1,169 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Globe } from "lucide-react";
+import { backendFetch, startGoogleSignIn } from "@/lib/backend";
+
+export default function RegisterPage() {
+  const router = useRouter();
+  const [form, setForm]       = useState({ name: "", email: "", phone: "", password: "", confirmPassword: "", city: "" });
+  const [loading, setLoading]       = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError]           = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    setLoading(true);
+    setError("");
+
+    try {
+      const body = new FormData();
+      body.append("name", form.name);
+      body.append("email", form.email);
+      body.append("phone", form.phone);
+      body.append("password", form.password);
+      body.append("city", form.city);
+      if (avatarFile) body.append("avatar", avatarFile);
+
+      const res  = await backendFetch("/api/auth/register", {
+        method: "POST",
+        body,
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        window.dispatchEvent(new Event("userChanged"));
+        router.push("/");
+        router.refresh();
+      } else {
+        setError(data.message);
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
+      <div className="w-full max-w-md">
+
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-gray-500 hover:text-[#0f172a] transition-colors mb-6 group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-sm font-medium">Back</span>
+        </button>
+
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-block">
+            <div className="inline-flex items-center justify-center rounded-full overflow-hidden bg-white p-2 shadow-sm">
+              <img
+                src="/usmanhub.logo-removebg-preview.png"
+                alt="Usman Store"
+                className="h-24 w-24 rounded-full object-contain"
+              />
+            </div>
+          </Link>
+          <h1 className="text-2xl font-bold text-gray-900 mt-4">Create an account</h1>
+          <p className="text-gray-500 text-sm mt-1">Create your Usman Store account and start selling today</p>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+          <button
+            type="button"
+            disabled={googleLoading || loading}
+            onClick={async () => {
+              setGoogleLoading(true);
+              setError("");
+              await startGoogleSignIn((msg) => {
+                setError(msg);
+                setGoogleLoading(false);
+              });
+            }}
+            className="w-full inline-flex items-center justify-center gap-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors rounded-2xl py-3 mb-6 font-semibold disabled:opacity-60"
+          >
+            <Globe className="w-5 h-5" />
+            {googleLoading ? "Redirecting to Google..." : "Continue with Google"}
+          </button>
+          {error && (
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input type="text" required placeholder="Ahmed Khan" value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-[#0f172a]" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+              <input type="email" required placeholder="you@example.com" value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-[#0f172a]" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <input type="tel" required placeholder="03XX-XXXXXXX" value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-[#0f172a]" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Profile photo (optional)</label>
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:bg-[#0f172a] file:text-white"
+              />
+              <p className="text-xs text-gray-400 mt-1">JPG, PNG or WEBP — max 5MB. Uploaded to Cloudinary.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+              <select value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-[#0f172a]">
+                <option value="">Select city...</option>
+                {["Karachi","Lahore","Islamabad","Rawalpindi","Faisalabad","Peshawar","Quetta","Multan"].map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input type="password" required placeholder="Min. 6 characters" value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-[#0f172a]" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+              <input type="password" required placeholder="Repeat password" value={form.confirmPassword}
+                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm outline-none focus:border-[#0f172a]" />
+            </div>
+
+            <button type="submit" disabled={loading}
+              className="w-full bg-[#0f172a] text-white py-3 rounded-lg font-semibold hover:bg-[#1e293b] transition-colors disabled:opacity-60">
+              {loading ? "Creating account..." : "Create Account"}
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Already have an account?{" "}
+            <Link href="/login" className="text-[#0f172a] font-semibold hover:underline">Sign In</Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
