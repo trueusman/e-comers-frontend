@@ -7,6 +7,7 @@ import BottomNav from "@/components/BottomNav";
 import CookieBanner from "@/components/CookieBanner";
 import PageTransition from "@/components/PageTransition";
 import { CartProvider } from "@/lib/cartContext";
+import { AuthProvider } from "@/lib/authContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,15 +30,17 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-[#f0f4ff] text-gray-900 overflow-x-hidden" suppressHydrationWarning>
-        <CartProvider>
-          <Navbar />
-          <main className="flex-1 pb-20 lg:pb-0">
-            <PageTransition>{children}</PageTransition>
-          </main>
-          <Footer />
-          <BottomNav />
-          <CookieBanner />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <Navbar />
+            <main className="flex-1 pb-20 lg:pb-0">
+              <PageTransition>{children}</PageTransition>
+            </main>
+            <Footer />
+            <BottomNav />
+            <CookieBanner />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

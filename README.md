@@ -17,9 +17,14 @@ bun dev
 This frontend now connects to a separate backend API. Create a `.env.local` file with:
 
 ```bash
-NEXT_PUBLIC_BACKEND_URL=https://e-commers-backend.onrender.com
-BACKEND_URL=https://e-commers-backend.onrender.com
+NEXT_PUBLIC_BACKEND_URL=https://e-commers-backend-cyan.vercel.app
+BACKEND_URL=https://e-commers-backend-cyan.vercel.app
 ```
+
+Deployed apps:
+
+- Frontend: https://e-comers-frontend-rho.vercel.app
+- Backend: https://e-commers-backend-cyan.vercel.app
 
 Then open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

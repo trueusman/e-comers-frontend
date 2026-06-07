@@ -11,22 +11,40 @@ function readBackendUrl(): string {
   return url ? stripSlash(url) : "";
 }
 
-/** Server-side / OAuth — public Render API URL */
+/** Server-side — public API URL */
 export function getBackendBase(): string {
   const url = readBackendUrl();
   if (!url) {
     throw new Error(
-      "Set NEXT_PUBLIC_BACKEND_URL (and BACKEND_URL for rewrites) to your Render URL, e.g. https://e-commers-backend.onrender.com"
+      "Set NEXT_PUBLIC_BACKEND_URL (and BACKEND_URL for rewrites) to your API URL, e.g. https://e-commers-backend-cyan.vercel.app"
     );
   }
   return url;
 }
 
-/** Browser — Render URL or same-origin /express proxy */
+function isLocalFrontend(): boolean {
+  if (typeof window === "undefined") return false;
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(
+    window.location.origin
+  );
+}
+
+/** Browser — same-origin /express proxy (avoids CORS); optional direct URL in local dev */
 export function getClientBackendBase(): string {
+  if (typeof window !== "undefined") {
+    const devOverride = (
+      process.env.NEXT_PUBLIC_DEV_BACKEND_URL || ""
+    ).trim();
+
+    if (process.env.NODE_ENV !== "production" && isLocalFrontend() && devOverride) {
+      return stripSlash(devOverride);
+    }
+
+    return "/express";
+  }
+
   const url = readBackendUrl();
   if (url) return url;
-  if (typeof window !== "undefined") return "/express";
   return getBackendBase();
 }
 
@@ -42,17 +60,19 @@ export function backendUrl(path: string) {
 
 export async function backendFetch(path: string, options: RequestInit = {}) {
   const headers = new Headers(options.headers || {});
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
-    if (token && !headers.has("Authorization")) {
-      headers.set("Authorization", `Bearer ${token}`);
-    }
-  }
-  return fetch(backendUrl(path), { ...options, headers });
+  
+  // For client-side requests, always send cookies
+  const finalOptions: RequestInit = {
+    ...options,
+    headers,
+    credentials: "include" as RequestCredentials,
+  };
+  
+  return fetch(backendUrl(path), finalOptions);
 }
 
 export function getGoogleSignInUrl() {
-  return `${getBackendBase()}/api/auth/google`;
+  return `${getClientBackendBase()}/api/auth/google`;
 }
 
 export async function startGoogleSignIn(onError: (message: string) => void) {
@@ -69,7 +89,7 @@ export async function startGoogleSignIn(onError: (message: string) => void) {
     }
   } catch {
     onError(
-      `Cannot reach the API at ${getBackendBase()}. Check Render is running and NEXT_PUBLIC_BACKEND_URL on Vercel.`
+      `Cannot reach the API at ${getBackendBase()}. Check the backend is deployed and NEXT_PUBLIC_BACKEND_URL is set on Vercel.`
     );
     return;
   }

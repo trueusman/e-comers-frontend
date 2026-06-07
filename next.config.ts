@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV === "development";
 const apiBase = (
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  process.env.BACKEND_URL ||
-  ""
+  isDev
+    ? process.env.DEV_BACKEND_URL || "http://localhost:5000"
+    : process.env.NEXT_PUBLIC_BACKEND_URL ||
+      process.env.BACKEND_URL ||
+      ""
 ).replace(/\/$/, "");
 
 let apiHostname: string | undefined;

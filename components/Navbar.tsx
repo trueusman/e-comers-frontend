@@ -11,6 +11,7 @@ import {
   Package, Heart, ShoppingCart, Settings, Search,
 } from "lucide-react";
 import { useCart } from "@/lib/cartContext";
+import { useAuth } from "@/lib/authContext";
 
 const NAV_CATS = [
   {
@@ -86,12 +87,12 @@ const getAvatarColor = (name: string) => {
 export default function Navbar() {
   const router   = useRouter();
   const pathname = usePathname();
+  const { user: authUser, logout } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [location,    setLocation]    = useState("All Pakistan");
   const [menuOpen,    setMenuOpen]    = useState(false);
   const [searchOpen,  setSearchOpen]  = useState(false);
-  const [user,        setUser]        = useState<any>(null);
   const [userMenuOpen,setUserMenuOpen]= useState(false);
   const [loginPopup,  setLoginPopup]  = useState(false);
   const [catMenuOpen, setCatMenuOpen] = useState(false);
@@ -107,9 +108,6 @@ export default function Navbar() {
   const isHidden = ["/login", "/register"].includes(pathname);
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
-
     const syncOrders = () => {
       try {
         const o = localStorage.getItem("orders");
@@ -118,17 +116,8 @@ export default function Navbar() {
     };
     syncOrders();
 
-    const syncUser = () => {
-      const s = localStorage.getItem("user");
-      setUser(s ? JSON.parse(s) : null);
-      syncOrders();
-    };
-    window.addEventListener("storage", syncUser);
-    window.addEventListener("userChanged", syncUser);
     window.addEventListener("ordersChanged", syncOrders);
     return () => {
-      window.removeEventListener("storage", syncUser);
-      window.removeEventListener("userChanged", syncUser);
       window.removeEventListener("ordersChanged", syncOrders);
     };
   }, []);
@@ -172,17 +161,15 @@ export default function Navbar() {
     else router.push("/listings");
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
+  const handleLogout = async () => {
+    await logout();
     setUserMenuOpen(false);
     router.push("/");
     router.refresh();
   };
 
   const handleSellClick = (e: React.MouseEvent) => {
-    if (!user) { e.preventDefault(); setLoginPopup(true); }
+    if (!authUser) { e.preventDefault(); setLoginPopup(true); }
   };
 
   // Avatar helper inline — shows uploaded photo if available, else initials
@@ -237,21 +224,21 @@ export default function Navbar() {
               {/* Desktop right icons */}
               <div className="hidden md:flex items-center gap-1">
                 {/* User menu */}
-                {user ? (
+                {authUser ? (
                   <div className="relative" ref={userMenuRef}>
                     <button onClick={() => setUserMenuOpen(!userMenuOpen)}
                       className="flex items-center gap-2 p-1.5 rounded-lg text-gray-300 hover:text-white hover:bg-white/8 transition-colors">
-                      <Avatar name={user.name || "U"} photo={user.avatar} size="sm" />
-                      <span className="text-sm font-medium hidden lg:block">{user.name?.split(" ")[0]}</span>
+                      <Avatar name={authUser.name || "U"} photo={authUser.avatar} size="sm" />
+                      <span className="text-sm font-medium hidden lg:block">{authUser.name?.split(" ")[0]}</span>
                       <ChevronDown className={`w-3 h-3 transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
                     </button>
                     {userMenuOpen && (
                       <div className="absolute right-0 top-11 w-52 bg-[#1e293b] border border-white/10 rounded-xl shadow-2xl py-2 z-50">
                         <div className="px-4 py-3 border-b border-white/10 mb-1 flex items-center gap-3">
-                          <Avatar name={user.name || "U"} photo={user.avatar} size="md" />
+                          <Avatar name={authUser.name || "U"} photo={authUser.avatar} size="md" />
                           <div className="min-w-0">
-                            <p className="text-white text-sm font-semibold truncate">{user.name}</p>
-                            <p className="text-gray-400 text-xs truncate">{user.email}</p>
+                            <p className="text-white text-sm font-semibold truncate">{authUser.name}</p>
+                            <p className="text-gray-400 text-xs truncate">{authUser.email}</p>
                           </div>
                         </div>
                         <Link href="/profile" onClick={() => setUserMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/8 transition-colors">
@@ -328,7 +315,7 @@ export default function Navbar() {
               <div className="flex md:hidden items-center gap-2">
 
                 {/* Mobile Orders button with count badge */}
-                {user ? (
+                {authUser ? (
                   <Link href="/orders" className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 active:bg-white/20">
                     <Package className="w-5 h-5 text-gray-300" />
                     {orderCount > 0 && (
@@ -516,12 +503,12 @@ export default function Navbar() {
                 </select>
               </div>
 
-              {user ? (
+              {authUser ? (
                 <div className="flex items-center justify-between bg-white/5 rounded-xl px-4 py-3 border border-white/10">
                   <Link href="/profile" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 flex-1">
-                    <Avatar name={user.name || "U"} photo={user.avatar} size="sm" />
+                    <Avatar name={authUser.name || "U"} photo={authUser.avatar} size="sm" />
                     <div>
-                      <p className="text-white font-medium text-sm">{user.name}</p>
+                      <p className="text-white font-medium text-sm">{authUser.name}</p>
                       <p className="text-gray-400 text-xs">View Profile</p>
                     </div>
                   </Link>

@@ -1,47 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { backendFetch, startGoogleSignIn } from "@/lib/backend";
+import { useAuth } from "@/lib/authContext";
+import { startGoogleSignIn } from "@/lib/backend";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [form, setForm]     = useState({ email: "", password: "" });
-  const [loading, setLoading]       = useState(false);
+  const { user, login, isAuthenticated } = useAuth();
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [error, setError]           = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/");
+      router.refresh();
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    try {
-      const res  = await backendFetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
+    const result = await login(form.email, form.password);
 
-      if (data.success) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        window.dispatchEvent(new Event("userChanged"));
-        router.push("/");
-        router.refresh();
-      } else {
-        setError(data.message);
-      }
-    } catch (err: any) {
-      console.error("Login error:", err);
-      setError(err?.message || "Network error. Please try again.");
-    } finally {
+    if (result.success) {
+      router.push("/");
+      router.refresh();
+    } else {
+      setError(result.error || "Login failed");
       setLoading(false);
     }
   };
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
