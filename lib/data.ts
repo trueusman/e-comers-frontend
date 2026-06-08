@@ -13,18 +13,15 @@ export type Listing = {
 };
 
 export const categories = [
-  { name: "Smartphones",        slug: "smartphones"        },
-  { name: "Laptops",            slug: "laptops"            },
-  { name: "Tablets",            slug: "tablets"            },
-  { name: "Mobile Accessories", slug: "mobile-accessories" },
-  { name: "Vehicles",           slug: "vehicle"            },
-  { name: "Motorcycle",         slug: "motorcycle"         },
-  { name: "Furniture",          slug: "furniture"          },
-  { name: "Home Decoration",    slug: "home-decoration"    },
-  { name: "Sports",             slug: "sports-accessories" },
-  { name: "Beauty",             slug: "beauty"             },
-  { name: "Skin Care",          slug: "skin-care"          },
-  { name: "Fashion",            slug: "womens-dresses"     },
+  { name: "Electronics",    slug: "electronics" },
+  { name: "Vehicles",       slug: "vehicles"    },
+  { name: "Property",       slug: "property"    },
+  { name: "Fashion",        slug: "fashion"     },
+  { name: "Furniture",      slug: "furniture"   },
+  { name: "Books",          slug: "books"       },
+  { name: "Sports",         slug: "sports"      },
+  { name: "Jobs",           slug: "jobs"        },
+  { name: "Other",          slug: "other"       },
 ];
 
 export const listings: Listing[] = [

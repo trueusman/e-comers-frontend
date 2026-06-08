@@ -8,22 +8,22 @@ import {
 } from "lucide-react";
 
 const CATS = [
-  { name: "Smartphones",        slug: "smartphones",         Icon: Smartphone  },
-  { name: "Laptops",            slug: "laptops",             Icon: Laptop      },
-  { name: "Tablets",            slug: "tablets",             Icon: Tablet      },
-  { name: "Accessories",        slug: "mobile-accessories",  Icon: Plug        },
-  { name: "Cars",               slug: "vehicle",             Icon: Car         },
-  { name: "Motorcycles",        slug: "motorcycle",          Icon: Bike        },
-  { name: "Furniture",          slug: "furniture",           Icon: Sofa        },
-  { name: "Home Decor",         slug: "home-decoration",     Icon: Home        },
-  { name: "Sports",             slug: "sports-accessories",  Icon: Trophy      },
-  { name: "Beauty",             slug: "beauty",              Icon: Sparkles    },
-  { name: "Skin Care",          slug: "skin-care",           Icon: Leaf        },
-  { name: "Dresses",            slug: "womens-dresses",      Icon: Shirt       },
-  { name: "Bags",               slug: "womens-bags",         Icon: ShoppingBag },
-  { name: "Watches",            slug: "mens-watches",        Icon: Watch       },
-  { name: "Jewellery",          slug: "womens-jewellery",    Icon: Gem         },
-  { name: "Kitchen",            slug: "kitchen-accessories", Icon: Utensils    },
+  { name: "Electronics",    slug: "electronics",  Icon: Smartphone  },
+  { name: "Laptops",        slug: "electronics",  Icon: Laptop      },
+  { name: "Tablets",        slug: "electronics",  Icon: Tablet      },
+  { name: "Accessories",    slug: "electronics",  Icon: Plug        },
+  { name: "Cars",           slug: "vehicles",     Icon: Car         },
+  { name: "Motorcycles",    slug: "vehicles",     Icon: Bike        },
+  { name: "Furniture",      slug: "furniture",    Icon: Sofa        },
+  { name: "Home Decor",     slug: "furniture",    Icon: Home        },
+  { name: "Sports",         slug: "sports",       Icon: Trophy      },
+  { name: "Beauty",         slug: "fashion",      Icon: Sparkles    },
+  { name: "Skin Care",      slug: "fashion",      Icon: Leaf        },
+  { name: "Fashion",        slug: "fashion",      Icon: Shirt       },
+  { name: "Bags",           slug: "fashion",      Icon: ShoppingBag },
+  { name: "Watches",        slug: "fashion",      Icon: Watch       },
+  { name: "Jewellery",      slug: "fashion",      Icon: Gem         },
+  { name: "Kitchen",        slug: "other",        Icon: Utensils    },
 ];
 
 // duplicate for seamless loop

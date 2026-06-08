@@ -15,6 +15,10 @@ const CATEGORY_MAP: Record<string, string> = {
   groceries: "other", "home-decoration": "furniture", electronics: "electronics",
   smartphones: "electronics", laptops: "electronics", vehicles: "vehicles",
   sports: "sports", books: "books", fashion: "fashion",
+  tablets: "electronics", "mobile-accessories": "electronics",
+  vehicle: "vehicles", motorcycle: "vehicles", "home-decor": "furniture",
+  "sports-accessories": "sports", "beauty": "fashion", "skin-care": "fashion",
+  "womens-dresses": "fashion", property: "property", jobs: "jobs", other: "other",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────

@@ -23,6 +23,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
   books:       BookOpen,
   sports:      Trophy,
   jobs:        Briefcase,
+  other:       Package,
 };
 
 export default function PostAdPage() {
