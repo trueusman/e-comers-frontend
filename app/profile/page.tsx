@@ -10,6 +10,7 @@ import {
   Plus, Trash2, Package, ChevronRight, Edit2,
   Check, X, Camera, Loader2, AlertCircle, Trash,
 } from "lucide-react";
+import { useAuth } from "@/lib/authContext";
 
 // ── Reusable Avatar component ──────────────────────────────────
 function AvatarImage({
@@ -32,12 +33,13 @@ function AvatarImage({
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { user: authUser, isAuthenticated, loading: authLoading, refreshUser } = useAuth();
   const [user, setUser]       = useState<any>(null);
   const [form, setForm]       = useState({ name: "", email: "", phone: "", city: "" });
   const [saved, setSaved]     = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "cards" | "address" | "orders">("profile");
   const [avatarUrl, setAvatarUrl] = useState<string>("");
-  const [avatarPreview, setAvatarPreview] = useState<string>("");  // local preview before upload
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [avatarError,   setAvatarError]   = useState("");
   const [avatarSuccess, setAvatarSuccess] = useState("");
@@ -56,40 +58,35 @@ export default function ProfilePage() {
   // Orders
   const [orders, setOrders] = useState<any[]>([]);
 
+  // Redirect if not authenticated
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (!stored) { router.push("/login"); return; }
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [authLoading, isAuthenticated, router]);
 
-    const initialUser = JSON.parse(stored);
-    setUser(initialUser);
-    setForm({ name: initialUser.name || "", email: initialUser.email || "", phone: initialUser.phone || "", city: initialUser.city || "" });
-    setAvatarUrl(initialUser.avatar || "");
+  // Sync from authContext user
+  useEffect(() => {
+    if (authUser) {
+      setUser(authUser);
+      setForm({
+        name:  authUser.name  || "",
+        email: authUser.email || "",
+        phone: authUser.phone || "",
+        city:  authUser.city  || "",
+      });
+      setAvatarUrl(authUser.avatar || "");
+    }
+  }, [authUser]);
 
+  useEffect(() => {
     const c = localStorage.getItem("savedCards");
     if (c) setCards(JSON.parse(c));
     const a = localStorage.getItem("savedAddresses");
     if (a) setAddresses(JSON.parse(a));
     const o = localStorage.getItem("orders");
     if (o) setOrders(JSON.parse(o));
-
-    const fetchProfile = async () => {
-      try {
-        const res = await backendFetch("/api/auth/me");
-        const data = await res.json();
-        if (data.success && data.user) {
-          setUser(data.user);
-          setForm({ name: data.user.name || "", email: data.user.email || "", phone: data.user.phone || "", city: data.user.city || "" });
-          setAvatarUrl(data.user.avatar || "");
-          localStorage.setItem("user", JSON.stringify(data.user));
-          window.dispatchEvent(new Event("userChanged"));
-        }
-      } catch {
-        // Leave existing localStorage user in place when backend is unavailable
-      }
-    };
-
-    fetchProfile();
-  }, [router]);
+  }, []);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,18 +104,11 @@ export default function ProfilePage() {
         const updatedUser = { ...user, ...data.user };
         setUser(updatedUser);
         setForm({ name: updatedUser.name || "", email: updatedUser.email || "", phone: updatedUser.phone || "", city: updatedUser.city || "" });
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        window.dispatchEvent(new Event("userChanged"));
+        await refreshUser();
         setSaved(true);
         setTimeout(() => setSaved(false), 2500);
-      } else {
-        setSaved(false);
       }
     } catch {
-      const updatedUser = { ...user, ...updatedFields };
-      setUser(updatedUser);
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      window.dispatchEvent(new Event("userChanged"));
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     }
@@ -161,9 +151,8 @@ export default function ProfilePage() {
         setAvatarUrl(data.avatar);
         setAvatarPreview("");
         const updated = { ...user, avatar: data.avatar };
-        localStorage.setItem("user", JSON.stringify(updated));
         setUser(updated);
-        window.dispatchEvent(new Event("userChanged"));
+        await refreshUser();
         setAvatarSuccess("Profile photo updated!");
         setTimeout(() => setAvatarSuccess(""), 3000);
       } else {
@@ -192,9 +181,8 @@ export default function ProfilePage() {
         setAvatarUrl("");
         setAvatarPreview("");
         const updated = { ...user, avatar: "" };
-        localStorage.setItem("user", JSON.stringify(updated));
         setUser(updated);
-        window.dispatchEvent(new Event("userChanged"));
+        await refreshUser();
         setAvatarSuccess("Photo removed.");
         setTimeout(() => setAvatarSuccess(""), 3000);
       }
@@ -237,7 +225,11 @@ export default function ProfilePage() {
     localStorage.setItem("savedAddresses", JSON.stringify(updated));
   };
 
-  if (!user) return null;
+  if (authLoading || !user) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-[#0f172a]" />
+    </div>
+  );
 
   const statusColor: Record<string, string> = {
     pending:   "bg-yellow-100 text-yellow-700",

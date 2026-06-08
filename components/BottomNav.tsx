@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Search, Plus, Heart, User, LogOut, LogIn, X, Package, Bell, Settings } from "lucide-react";
+import { Home, Search, Plus, Heart, User, LogOut, LogIn, X, Package, Settings } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/authContext";
+import Image from "next/image";
 
 // Initials avatar helpers
 const getInitials = (name: string) => {
@@ -23,6 +24,33 @@ const getAvatarColor = (name: string) => {
   return colors[Math.abs(hash) % colors.length];
 };
 
+function UserAvatar({ user, size = 32 }: { user: any; size?: number }) {
+  const [imgError, setImgError] = useState(false);
+  const sizeClass = size === 32 ? "w-8 h-8 text-xs" : "w-16 h-16 text-xl";
+
+  if (user.avatar && !imgError) {
+    return (
+      <img
+        src={user.avatar}
+        alt={user.name}
+        referrerPolicy="no-referrer"
+        onError={() => setImgError(true)}
+        className={`${sizeClass} rounded-full object-cover`}
+      />
+    );
+  }
+
+  const [bg, ring] = getAvatarColor(user.name || "U");
+  return (
+    <div
+      className={`${sizeClass} rounded-full flex items-center justify-center text-white font-black`}
+      style={{ background: `linear-gradient(135deg, ${bg}, ${ring})` }}
+    >
+      {getInitials(user.name || "U")}
+    </div>
+  );
+}
+
 export default function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -30,7 +58,6 @@ export default function BottomNav() {
   const [profilePopup, setProfilePopup] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
 
-  // Login / Register pages pe BottomNav mat dikhao
   const hideOnPaths = ["/login", "/register"];
   const isHidden = hideOnPaths.includes(pathname);
 
@@ -51,10 +78,15 @@ export default function BottomNav() {
   }, [profilePopup]);
 
   const handleLogout = async () => {
-    await logout();
     setProfilePopup(false);
+    await logout();
     router.push("/");
     router.refresh();
+  };
+
+  const handleNavLink = (href: string) => {
+    setProfilePopup(false);
+    router.push(href);
   };
 
   const tabs = [
@@ -94,15 +126,7 @@ export default function BottomNav() {
                       profilePopup ? "ring-2 ring-[#3b82f6]" : ""
                     }`}>
                       {user ? (
-                        (() => {
-                          const [bg, ring] = getAvatarColor(user.name || "U");
-                          return (
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-black"
-                              style={{ background: `linear-gradient(135deg, ${bg}, ${ring})` }}>
-                              {getInitials(user.name || "U")}
-                            </div>
-                          );
-                        })()
+                        <UserAvatar user={user} size={32} />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
                           <Icon className="w-5 h-5 text-gray-400" />
@@ -121,12 +145,6 @@ export default function BottomNav() {
               return (
                 <Link key={label} href={href}
                   className="group relative flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors">
-
-                  {/* Tooltip */}
-                  <span className="absolute -top-9 left-1/2 -translate-x-1/2 z-20 origin-bottom scale-0 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold shadow-md whitespace-nowrap transition-all duration-200 ease-out group-hover:scale-100">
-                    {label}
-                  </span>
-
                   <div className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${
                     isActive
                       ? "bg-[#0f172a]/10 text-[#0f172a]"
@@ -139,8 +157,6 @@ export default function BottomNav() {
                   }`}>
                     {label}
                   </span>
-
-                  {/* Active dot */}
                   {isActive && (
                     <span className="absolute top-1 right-2 w-1.5 h-1.5 rounded-full bg-[#3b82f6]" />
                   )}
@@ -162,35 +178,37 @@ export default function BottomNav() {
 
             {user ? (
               <>
+                {/* User header */}
                 <div className="flex items-center gap-4 mb-5">
-                  {(() => {
-                    const [bg, ring] = getAvatarColor(user.name || "U");
-                    return (
-                      <div className="w-16 h-16 rounded-full flex items-center justify-center text-white text-xl font-black flex-shrink-0"
-                        style={{ background: `linear-gradient(135deg, ${bg}, ${ring})` }}>
-                        {getInitials(user.name || "U")}
-                      </div>
-                    );
-                  })()}
+                  <UserAvatar user={user} size={64} />
                   <div>
                     <p className="font-bold text-gray-900 text-lg">{user.name}</p>
                     <p className="text-sm text-gray-500">{user.email}</p>
                   </div>
                 </div>
+
+                {/* Menu items — use button+router.push so popup closes first */}
                 <div className="flex flex-col gap-1 mb-4">
-                  <Link href="/profile" onClick={() => setProfilePopup(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  <button
+                    onClick={() => handleNavLink("/profile")}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors w-full text-left"
+                  >
                     <User className="w-4 h-4 text-[#0f172a]" /> My Profile
-                  </Link>
-                  <Link href="/orders" onClick={() => setProfilePopup(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  </button>
+                  <button
+                    onClick={() => handleNavLink("/orders")}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors w-full text-left"
+                  >
                     <Package className="w-4 h-4 text-[#0f172a]" /> Orders
-                  </Link>
-                  <Link href="/settings" onClick={() => setProfilePopup(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  </button>
+                  <button
+                    onClick={() => handleNavLink("/settings")}
+                    className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition-colors w-full text-left"
+                  >
                     <Settings className="w-4 h-4 text-[#0f172a]" /> Settings
-                  </Link>
+                  </button>
                 </div>
+
                 <button onClick={handleLogout}
                   className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 border border-red-200 py-3 rounded-xl font-semibold text-sm hover:bg-red-100 transition-colors">
                   <LogOut className="w-4 h-4" /> Logout
@@ -206,15 +224,18 @@ export default function BottomNav() {
                   Login karein ya naya account banayein
                 </p>
                 <div className="flex flex-col gap-3">
-                  <Link href="/login" onClick={() => setProfilePopup(false)}
-                    className="w-full flex items-center justify-center gap-2 bg-[#0f172a] text-white py-3 rounded-xl font-semibold text-sm hover:bg-[#1e293b] transition-colors">
-                    <LogIn className="w-4 h-4" />
-                    Login
-                  </Link>
-                  <Link href="/register" onClick={() => setProfilePopup(false)}
-                    className="w-full flex items-center justify-center gap-2 border-2 border-[#0f172a] text-[#0f172a] py-3 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors">
+                  <button
+                    onClick={() => handleNavLink("/login")}
+                    className="w-full flex items-center justify-center gap-2 bg-[#0f172a] text-white py-3 rounded-xl font-semibold text-sm hover:bg-[#1e293b] transition-colors"
+                  >
+                    <LogIn className="w-4 h-4" /> Login
+                  </button>
+                  <button
+                    onClick={() => handleNavLink("/register")}
+                    className="w-full flex items-center justify-center gap-2 border-2 border-[#0f172a] text-[#0f172a] py-3 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
+                  >
                     Register — It&apos;s Free
-                  </Link>
+                  </button>
                 </div>
               </>
             )}
