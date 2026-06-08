@@ -95,9 +95,22 @@ export default function PostAdPage() {
     setError("");
 
     try {
-      // Normalize category to valid backend enum just in case
-      const VALID_CATEGORIES = ["electronics","vehicles","property","fashion","furniture","books","sports","jobs","other"];
-      const normalizedCategory = VALID_CATEGORIES.includes(form.category) ? form.category : "other";
+      // Map any old/invalid category slug to a valid backend enum
+      const CATEGORY_NORMALIZE: Record<string, string> = {
+        electronics: "electronics", smartphones: "electronics", laptops: "electronics",
+        tablets: "electronics", "mobile-accessories": "electronics",
+        vehicles: "vehicles", vehicle: "vehicles", motorcycle: "vehicles", motorcycles: "vehicles",
+        cars: "vehicles", car: "vehicles",
+        property: "property",
+        fashion: "fashion", beauty: "fashion", "skin-care": "fashion",
+        "womens-dresses": "fashion", "womens-bags": "fashion",
+        furniture: "furniture", "home-decoration": "furniture", "home-decor": "furniture",
+        books: "books",
+        sports: "sports", "sports-accessories": "sports",
+        jobs: "jobs",
+        other: "other",
+      };
+      const normalizedCategory = CATEGORY_NORMALIZE[form.category] ?? "other";
 
       // Upload all images at once via /upload/multiple
       let uploadedImageUrls: string[] = [];
