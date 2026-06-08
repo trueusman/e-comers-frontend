@@ -112,33 +112,20 @@ export default function PostAdPage() {
       };
       const normalizedCategory = CATEGORY_NORMALIZE[form.category] ?? "other";
 
-      // Upload all images at once via /upload/multiple
-      let uploadedImageUrls: string[] = [];
-
-      if (imageFiles.length > 0) {
-        const imgData = new FormData();
-        imageFiles.forEach((file) => imgData.append("images", file));
-
-        try {
-          const imgRes  = await backendFetch("/upload/multiple", { method: "POST", body: imgData });
-          const imgJson = await imgRes.json();
-          if (imgJson.images?.length) {
-            uploadedImageUrls = imgJson.images.map((img: any) => img.url);
-          }
-        } catch {
-          // If Cloudinary upload fails, post without images
-        }
-      }
+      // Send as multipart/form-data so backend can upload images to Cloudinary directly
+      const formData = new FormData();
+      formData.append("title",       form.title);
+      formData.append("description", form.description);
+      formData.append("price",       String(Number(form.price)));
+      formData.append("category",    normalizedCategory);
+      formData.append("condition",   form.condition);
+      formData.append("location",    form.location);
+      formData.append("phone",       form.phone);
+      imageFiles.forEach((file) => formData.append("images", file));
 
       const res = await backendFetch("/api/listings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          category: normalizedCategory,
-          price:    Number(form.price),
-          images:   uploadedImageUrls,
-        }),
+        body: formData, // No Content-Type header — browser sets multipart boundary automatically
       });
 
       const data = await res.json();
