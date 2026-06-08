@@ -50,7 +50,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await res.json();
         if (data.success && data.user) {
           setUser(data.user);
+          // Keep localStorage token in sync — set a flag so guard passes
+          if (data.token) {
+            localStorage.setItem("token", data.token);
+          } else if (!localStorage.getItem("token")) {
+            // Backend confirmed session via cookie but no token in storage — set a flag
+            localStorage.setItem("token", "session");
+          }
         }
+      } else {
+        // Session expired or invalid — clear token
+        localStorage.removeItem("token");
       }
     } catch {
       // Backend unreachable (not running locally or Render asleep) — treat as logged out
@@ -90,6 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (result.success && result.user) {
         setUser(result.user);
+        // Save token so useAuthGuard can read it across page navigations
+        if (result.token) {
+          localStorage.setItem("token", result.token);
+        }
         window.dispatchEvent(new Event("userChanged"));
         return { success: true };
       }
@@ -117,6 +131,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (result.success && result.user) {
         setUser(result.user);
+        // Save token so useAuthGuard can read it across page navigations
+        if (result.token) {
+          localStorage.setItem("token", result.token);
+        }
         window.dispatchEvent(new Event("userChanged"));
         return { success: true };
       }
@@ -133,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await backendFetch("/api/auth/logout", { method: "POST" });
       setUser(null);
+      localStorage.removeItem("token");
       window.dispatchEvent(new Event("userChanged"));
     } catch (error) {
       console.error("Logout error:", error);
