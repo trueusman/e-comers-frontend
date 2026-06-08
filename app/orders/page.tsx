@@ -4,21 +4,25 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Package, ShoppingBag, ChevronRight, Clock } from "lucide-react";
+import { useAuth } from "@/lib/authContext";
 
 export default function OrdersPage() {
   const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
-  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (!stored) { router.push("/login"); return; }
-    setUser(JSON.parse(stored));
+    if (!loading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [loading, isAuthenticated, router]);
+
+  useEffect(() => {
     const saved = localStorage.getItem("orders");
     if (saved) setOrders(JSON.parse(saved));
-  }, [router]);
+  }, []);
 
-  if (!user) return null;
+  if (loading || !isAuthenticated) return null;
 
   const statusColor: Record<string, string> = {
     pending:   "bg-yellow-100 text-yellow-700",

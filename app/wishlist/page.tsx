@@ -5,25 +5,24 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, Trash2, ShoppingBag } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
+import { useAuth } from "@/lib/authContext";
 import { useAuthGuard } from "@/lib/useAuthGuard";
 import LoginModal from "@/components/LoginModal";
 
 export default function WishlistPage() {
   const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
   const [wishlist, setWishlist] = useState<any[]>([]);
-  const [user, setUser] = useState<any>(null);
   const { guard, showLoginModal, closeModal, goToLogin, goToRegister } = useAuthGuard();
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (!stored) {
-      guard(); // show login modal
+    if (!loading && !isAuthenticated) {
+      guard();
       return;
     }
-    setUser(JSON.parse(stored));
     const saved = localStorage.getItem("wishlist");
     if (saved) setWishlist(JSON.parse(saved));
-  }, []);
+  }, [loading, isAuthenticated]);
 
   const removeItem = (id: string) => {
     const updated = wishlist.filter((item) => item._id !== id);
@@ -31,7 +30,9 @@ export default function WishlistPage() {
     localStorage.setItem("wishlist", JSON.stringify(updated));
   };
 
-  if (!user) return (
+  if (loading) return null;
+
+  if (!isAuthenticated) return (
     <>
       {showLoginModal && <LoginModal onClose={closeModal} onLogin={goToLogin} onRegister={goToRegister} />}
     </>

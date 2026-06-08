@@ -93,7 +93,7 @@ export default function BottomNav() {
     { label: "Home",   href: "/",         Icon: Home   },
     { label: "Browse", href: "/listings", Icon: Search },
     { label: "Sell",   href: "/post-ad",  Icon: Plus, special: true },
-    { label: "Saved",  href: "#",         Icon: Heart  },
+    { label: "Saved",  href: "/wishlist", Icon: Heart  },
     { label: user ? user.name?.split(" ")[0] : "Profile", href: "#", Icon: User, isProfile: true },
   ];
 

@@ -5,6 +5,8 @@ import { Star, MapPin, Heart } from "lucide-react";
 import { formatPrice } from "@/lib/data";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/authContext";
+import LoginModal from "@/components/LoginModal";
 
 interface ProductCardProps {
   listing: any;
@@ -14,10 +16,12 @@ const PLACEHOLDER = "https://images.unsplash.com/photo-1560343090-f0409e92791a?w
 
 export default function ProductCard({ listing }: ProductCardProps) {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const id     = listing._id || listing.id;
   const image  = listing.images?.[0] || listing.image || PLACEHOLDER;
 
   const [wishlisted, setWishlisted] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("wishlist");
@@ -33,6 +37,10 @@ export default function ProductCard({ listing }: ProductCardProps) {
 
   const toggleWishlist = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
     const saved = localStorage.getItem("wishlist");
     let list = saved ? JSON.parse(saved) : [];
     if (wishlisted) {
@@ -45,10 +53,18 @@ export default function ProductCard({ listing }: ProductCardProps) {
   };
 
   return (
-    <div
-      onClick={goToListing}
-      className="group block cursor-pointer"
-    >
+    <>
+      {showLoginModal && (
+        <LoginModal
+          onClose={() => setShowLoginModal(false)}
+          onLogin={() => { setShowLoginModal(false); router.push("/login"); }}
+          onRegister={() => { setShowLoginModal(false); router.push("/register"); }}
+        />
+      )}
+      <div
+        onClick={goToListing}
+        className="group block cursor-pointer"
+      >
       <div className="bg-white rounded-xl overflow-hidden border border-gray-200 hover:shadow-lg hover:-translate-y-1 active:scale-95 transition-all duration-200">
 
         {/* ── Image ─────────────────────────────────── */}
@@ -74,12 +90,12 @@ export default function ProductCard({ listing }: ProductCardProps) {
             {listing.condition}
           </span>
 
-          {/* Heart */}
+          {/* Heart — always visible on mobile, hover on desktop */}
           <button
             onClick={toggleWishlist}
-            className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full bg-white shadow flex items-center justify-center z-10 md:opacity-0 md:group-hover:opacity-100 transition-all active:scale-90"
+            className="absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-white shadow-md flex items-center justify-center z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all active:scale-90"
           >
-            <Heart className={`w-3 h-3 ${wishlisted ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
+            <Heart className={`w-3.5 h-3.5 ${wishlisted ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
           </button>
         </div>
 
@@ -106,5 +122,6 @@ export default function ProductCard({ listing }: ProductCardProps) {
         </div>
       </div>
     </div>
+    </>
   );
 }
