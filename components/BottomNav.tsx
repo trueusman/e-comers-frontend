@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, Search, Plus, Heart, User, LogOut, LogIn, X, Package, Bell, Settings } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/lib/authContext";
 
 // Initials avatar helpers
 const getInitials = (name: string) => {
@@ -25,29 +26,13 @@ const getAvatarColor = (name: string) => {
 export default function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const { user, logout } = useAuth();
   const [profilePopup, setProfilePopup] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
 
   // Login / Register pages pe BottomNav mat dikhao
   const hideOnPaths = ["/login", "/register"];
   const isHidden = hideOnPaths.includes(pathname);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
-
-    const syncUser = () => {
-      const s = localStorage.getItem("user");
-      setUser(s ? JSON.parse(s) : null);
-    };
-    window.addEventListener("storage", syncUser);
-    window.addEventListener("userChanged", syncUser);
-    return () => {
-      window.removeEventListener("storage", syncUser);
-      window.removeEventListener("userChanged", syncUser);
-    };
-  }, []);
 
   // Close popup on outside click
   useEffect(() => {
@@ -65,10 +50,8 @@ export default function BottomNav() {
     return () => { document.body.style.overflow = ""; };
   }, [profilePopup]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
+  const handleLogout = async () => {
+    await logout();
     setProfilePopup(false);
     router.push("/");
     router.refresh();
