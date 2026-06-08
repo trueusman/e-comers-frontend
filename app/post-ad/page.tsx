@@ -95,6 +95,10 @@ export default function PostAdPage() {
     setError("");
 
     try {
+      // Normalize category to valid backend enum just in case
+      const VALID_CATEGORIES = ["electronics","vehicles","property","fashion","furniture","books","sports","jobs","other"];
+      const normalizedCategory = VALID_CATEGORIES.includes(form.category) ? form.category : "other";
+
       // Upload all images at once via /upload/multiple
       let uploadedImageUrls: string[] = [];
 
@@ -118,8 +122,9 @@ export default function PostAdPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
-          price:  Number(form.price),
-          images: uploadedImageUrls,
+          category: normalizedCategory,
+          price:    Number(form.price),
+          images:   uploadedImageUrls,
         }),
       });
 
