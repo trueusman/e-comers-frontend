@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { categories } from "@/lib/data";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,7 +11,7 @@ import LoginModal from "@/components/LoginModal";
 import {
   Smartphone, Car, Home, Shirt, Sofa, BookOpen,
   Trophy, Briefcase, Package, PartyPopper, Rocket,
-  ImagePlus, X, Upload,
+  ImagePlus, X,
 } from "lucide-react";
 
 const CATEGORY_ICONS: Record<string, React.ElementType> = {
@@ -40,7 +40,6 @@ export default function PostAdPage() {
   // Images
   const [imageFiles, setImageFiles]       = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     category: "", title: "", description: "",
@@ -69,9 +68,6 @@ export default function PostAdPage() {
     setImageFiles(combined);
     const previews = combined.map((f) => URL.createObjectURL(f));
     setImagePreviews(previews);
-
-    // reset input so same file can be re-added
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const removeImage = (index: number) => {
@@ -250,16 +246,6 @@ export default function PostAdPage() {
                 Product Images <span className="text-gray-400 font-normal">(up to 5, max 5MB each)</span>
               </label>
 
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp"
-                multiple
-                className="hidden"
-                onChange={handleImageAdd}
-              />
-
               <div className="flex flex-wrap gap-3">
                 {/* Image previews */}
                 {imagePreviews.map((src, i) => (
@@ -268,7 +254,7 @@ export default function PostAdPage() {
                     <button
                       type="button"
                       onClick={() => removeImage(i)}
-                      className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                      className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors z-10"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -280,16 +266,19 @@ export default function PostAdPage() {
                   </div>
                 ))}
 
-                {/* Add image button */}
+                {/* Add image — use label wrapping input, works on all mobile browsers */}
                 {imagePreviews.length < 5 && (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 hover:border-[#0f172a] flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-[#0f172a] transition-colors flex-shrink-0"
-                  >
+                  <label className="w-24 h-24 rounded-xl border-2 border-dashed border-gray-300 hover:border-[#0f172a] flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-[#0f172a] transition-colors flex-shrink-0 cursor-pointer active:bg-gray-50">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      multiple
+                      className="sr-only"
+                      onChange={handleImageAdd}
+                    />
                     <ImagePlus className="w-6 h-6" />
                     <span className="text-[10px] font-medium">Add Photo</span>
-                  </button>
+                  </label>
                 )}
               </div>
 
