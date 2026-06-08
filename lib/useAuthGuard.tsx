@@ -1,44 +1,34 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "./authContext";
 
 /**
- * useAuthGuard — login check karta hai
+ * useAuthGuard — uses authContext (single source of truth)
  * agar user logged in nahi hai to login popup dikhata hai
  * agar logged in hai to action run karta hai
  */
 export function useAuthGuard() {
   const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const check = () => {
-      const token = localStorage.getItem("token");
-      setIsLoggedIn(!!token);
-    };
-    check();
-    window.addEventListener("userChanged", check);
-    window.addEventListener("storage", check);
-    return () => {
-      window.removeEventListener("userChanged", check);
-      window.removeEventListener("storage", check);
-    };
-  }, []);
 
   // Guard function — action sirf tab run hoga jab logged in ho
   const guard = useCallback(
     (action?: () => void) => {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      // Auth still loading — check localStorage as fallback
+      const hasToken = typeof window !== "undefined" && !!localStorage.getItem("token");
+      const loggedIn = isAuthenticated || hasToken;
+
+      if (!loggedIn) {
         setShowLoginModal(true);
         return false;
       }
       if (action) action();
       return true;
     },
-    []
+    [isAuthenticated]
   );
 
   const closeModal = () => setShowLoginModal(false);
@@ -53,5 +43,12 @@ export function useAuthGuard() {
     router.push("/register");
   };
 
-  return { guard, isLoggedIn, showLoginModal, closeModal, goToLogin, goToRegister };
+  return {
+    guard,
+    isLoggedIn: isAuthenticated,
+    showLoginModal,
+    closeModal,
+    goToLogin,
+    goToRegister,
+  };
 }
