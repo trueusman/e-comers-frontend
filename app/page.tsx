@@ -5,6 +5,7 @@ import HeroSlider from "@/components/HeroSlider";
 import { Package, Search, Camera, MessageCircle, Handshake } from "lucide-react";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { getBackendBase } from "@/lib/backend";
 
 const CITIES = ["Karachi","Lahore","Islamabad","Rawalpindi","Faisalabad","Multan","Peshawar","Quetta"];
 const CATEGORY_MAP: Record<string, string> = {
@@ -14,7 +15,7 @@ const CATEGORY_MAP: Record<string, string> = {
   sports: "sports", books: "books", fashion: "fashion",
 };
 
-function loadProducts() {
+function loadStaticProducts() {
   try {
     const filePath = join(process.cwd(), "public", "products.json");
     const raw = JSON.parse(readFileSync(filePath, "utf-8"));
@@ -38,16 +39,42 @@ function loadProducts() {
   } catch { return []; }
 }
 
-function getFeatured() {
-  return loadProducts().filter((_: any, i: number) => i % 5 === 0).slice(0, 12);
+async function fetchBackendListings(limit = 12): Promise<any[]> {
+  try {
+    const api = getBackendBase();
+    const res = await fetch(`${api}/api/listings?limit=${limit}&sort=newest`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.listings || [];
+  } catch {
+    return [];
+  }
 }
 
-function getRecent() {
-  return loadProducts().slice(0, 8);
+async function getHomeProducts() {
+  // Fetch real user-posted listings from backend
+  const backendListings = await fetchBackendListings(12);
+  // Always include static products as fallback/filler
+  const staticProducts = loadStaticProducts();
+
+  // Merge: backend listings first, then static to fill up to 12
+  const merged = [...backendListings];
+  const needed = Math.max(0, 12 - merged.length);
+  return [...merged, ...staticProducts.slice(0, needed)];
+}
+
+async function getFeaturedProducts() {
+  const staticProducts = loadStaticProducts();
+  return staticProducts.filter((_: any, i: number) => i % 5 === 0).slice(0, 12);
 }
 
 export default async function HomePage() {
-  const [featured, recent] = [getFeatured(), getRecent()];
+  const [featured, recent] = await Promise.all([
+    getFeaturedProducts(),
+    getHomeProducts(),
+  ]);
 
   return (
     <div>

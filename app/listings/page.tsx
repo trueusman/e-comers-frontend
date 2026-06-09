@@ -4,38 +4,23 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
-import {  Smartphone, Laptop, Tablet, Plug, Car, Bike,
-  Sofa, Home, Trophy, Sparkles, Leaf, Shirt,
-  ShoppingBag, Watch, Gem, Utensils, BookOpen,
+import {  Smartphone, Car,
+  Sofa, Home, Trophy, Shirt,
+  BookOpen,
   Package, SearchX, SlidersHorizontal, X, ChevronDown,
 } from "lucide-react";
 
 const ALL_CATS = [
-  { name: "All",                  slug: "",                      Icon: Package    },
-  { name: "Smartphones",          slug: "smartphones",           Icon: Smartphone },
-  { name: "Laptops",              slug: "laptops",               Icon: Laptop     },
-  { name: "Tablets",              slug: "tablets",               Icon: Tablet     },
-  { name: "Mobile Accessories",   slug: "mobile-accessories",    Icon: Plug       },
-  { name: "Cars",                 slug: "vehicle",               Icon: Car        },
-  { name: "Motorcycles",          slug: "motorcycle",            Icon: Bike       },
-  { name: "Furniture",            slug: "furniture",             Icon: Sofa       },
-  { name: "Home Decoration",      slug: "home-decoration",       Icon: Home       },
-  { name: "Sports",               slug: "sports-accessories",    Icon: Trophy     },
-  { name: "Beauty",               slug: "beauty",                Icon: Sparkles   },
-  { name: "Skin Care",            slug: "skin-care",             Icon: Leaf       },
-  { name: "Women's Dresses",      slug: "womens-dresses",        Icon: Shirt      },
-  { name: "Women's Bags",         slug: "womens-bags",           Icon: ShoppingBag},
-  { name: "Women's Shoes",        slug: "womens-shoes",          Icon: Gem        },
-  { name: "Women's Jewellery",    slug: "womens-jewellery",      Icon: Gem        },
-  { name: "Women's Watches",      slug: "womens-watches",        Icon: Watch      },
-  { name: "Men's Shirts",         slug: "mens-shirts",           Icon: Shirt      },
-  { name: "Men's Shoes",          slug: "mens-shoes",            Icon: Gem        },
-  { name: "Men's Watches",        slug: "mens-watches",          Icon: Watch      },
-  { name: "Sunglasses",           slug: "sunglasses",            Icon: Sparkles   },
-  { name: "Fragrances",           slug: "fragrances",            Icon: Sparkles   },
-  { name: "Groceries",            slug: "groceries",             Icon: Utensils   },
-  { name: "Kitchen",              slug: "kitchen-accessories",   Icon: Utensils   },
-  { name: "Tops",                 slug: "tops",                  Icon: Shirt      },
+  { name: "All",                slug: "",              Icon: Package    },
+  { name: "Electronics",        slug: "electronics",   Icon: Smartphone },
+  { name: "Vehicles",           slug: "vehicles",      Icon: Car        },
+  { name: "Property",           slug: "property",      Icon: Home       },
+  { name: "Fashion",            slug: "fashion",       Icon: Shirt      },
+  { name: "Furniture",          slug: "furniture",     Icon: Sofa       },
+  { name: "Books",              slug: "books",         Icon: BookOpen   },
+  { name: "Sports",             slug: "sports",        Icon: Trophy     },
+  { name: "Jobs",               slug: "jobs",          Icon: Package    },
+  { name: "Other",              slug: "other",         Icon: Package    },
 ];
 
 function ListingsContent() {
