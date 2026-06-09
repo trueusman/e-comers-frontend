@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Upload } from "lucide-react";
@@ -9,7 +9,6 @@ import { useAuth } from "@/lib/authContext";
 export default function RegisterPage() {
   const router = useRouter();
   const { signup, isAuthenticated } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [form, setForm] = useState({
     name: "",
@@ -63,9 +62,7 @@ export default function RegisterPage() {
     setError("");
 
     if (!form.avatar) {
-      setError("Profile image is required");
-      setLoading(false);
-      return;
+      // Avatar is optional — skip, backend will use a generated avatar
     }
 
     const result = await signup({
@@ -126,11 +123,8 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Profile Image Upload */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Profile Image *</label>
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-[#0f172a] transition-colors"
-              >
+              <label className="block text-sm font-medium text-gray-700 mb-2">Profile Image <span className="text-gray-400 font-normal">(optional)</span></label>
+              <label className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-[#0f172a] transition-colors block">
                 {preview ? (
                   <div className="flex flex-col items-center gap-2">
                     <img src={preview} alt="Preview" className="w-16 h-16 rounded-full object-cover" />
@@ -143,14 +137,13 @@ export default function RegisterPage() {
                     <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
                   </div>
                 )}
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="sr-only"
+                />
+              </label>
             </div>
 
             {/* Name */}
@@ -228,7 +221,7 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              disabled={loading || !form.avatar || passwordErrors.length > 0}
+              disabled={loading || passwordErrors.length > 0}
               className="w-full bg-[#0f172a] text-white py-3 rounded-lg font-semibold hover:bg-[#1e293b] transition-colors mt-4 disabled:opacity-60"
             >
               {loading ? "Creating account..." : "Create Account"}
