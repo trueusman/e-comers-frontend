@@ -6,8 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { backendFetch } from "@/lib/backend";
 import { useAuth } from "@/lib/authContext";
-import { useAuthGuard } from "@/lib/useAuthGuard";
-import LoginModal from "@/components/LoginModal";
 import {
   Smartphone, Car, Home, Shirt, Sofa, BookOpen,
   Trophy, Briefcase, Package, PartyPopper, Rocket,
@@ -29,7 +27,6 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 export default function PostAdPage() {
   const router  = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { guard, showLoginModal, closeModal, goToLogin, goToRegister } = useAuthGuard();
 
   const [step, setStep]           = useState(1);
   const [submitted, setSubmitted] = useState(false);
@@ -46,12 +43,13 @@ export default function PostAdPage() {
     price: "", condition: "", location: "", phone: "",
   });
 
-  // Check login on mount
+  // Check login on mount — wait for auth to finish loading first
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      guard();
+    if (authLoading) return; // wait
+    if (!isAuthenticated) {
+      router.push("/login");
     }
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, router]);
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -83,7 +81,7 @@ export default function PostAdPage() {
 
     if (!isAuthenticated) {
       setError("Please login first to post an ad.");
-      guard();
+      router.push("/login");
       return;
     }
 
@@ -166,9 +164,17 @@ export default function PostAdPage() {
     );
   }
 
+  // Show loading while auth is being checked
+  if (authLoading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-8 h-8 border-4 border-[#0f172a] border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (!isAuthenticated) return null;
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      {showLoginModal && <LoginModal onClose={closeModal} onLogin={goToLogin} onRegister={goToRegister} />}
 
       <div className="mb-6">
         <nav className="text-sm text-gray-500 mb-3">
