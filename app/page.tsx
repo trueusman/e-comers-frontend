@@ -5,7 +5,6 @@ import HeroSlider from "@/components/HeroSlider";
 import { Package, Search, Camera, MessageCircle, Handshake } from "lucide-react";
 import { readFileSync } from "fs";
 import { join } from "path";
-import { getBackendBase } from "@/lib/backend";
 
 const CITIES = ["Karachi","Lahore","Islamabad","Rawalpindi","Faisalabad","Multan","Peshawar","Quetta"];
 const CATEGORY_MAP: Record<string, string> = {
@@ -40,8 +39,17 @@ function loadStaticProducts() {
 }
 
 async function fetchBackendListings(limit = 12): Promise<any[]> {
+  // The homepage can be prerendered during Vercel builds, so do not throw
+  // when the backend URL is not configured yet. Static products remain usable.
+  const api = (
+    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    process.env.BACKEND_URL ||
+    ""
+  ).trim().replace(/\/$/, "");
+
+  if (!api) return [];
+
   try {
-    const api = getBackendBase();
     const res = await fetch(`${api}/api/listings?limit=${limit}&sort=newest`, {
       cache: "no-store",
     });
